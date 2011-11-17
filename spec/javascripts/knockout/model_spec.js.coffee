@@ -27,6 +27,9 @@ describe "Model", ->
     beforeEach ->
       jasmine.Ajax.useMock()
 
+    it "should return jQuery deferred when saving", ->
+      expect( @page.save().done ).toBeTruthy()
+
     it "should include CSRF token", ->
       @page.save()
       csrf = mostRecentAjaxRequest().requestHeaders['X-CSRF-Token']
