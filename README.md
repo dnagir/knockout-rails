@@ -29,8 +29,8 @@ TODO: Describe
 
 # Development
 
-- Source hosted at [GitHub](https://github.com/dnagir/knockout)
-- Report issues and feature requests to [GitHub Issues](https://github.com/dnagir/knockout/issues)
+- Source hosted at [GitHub](https://github.com/dnagir/knockout-rails)
+- Report issues and feature requests to [GitHub Issues](https://github.com/dnagir/knockout-rails/issues)
 
 Pull requests are very welcome!
 
