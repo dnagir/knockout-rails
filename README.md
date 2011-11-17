@@ -14,7 +14,7 @@ gem 'knockout'
 
 Then `bundle install`.
 
-Reference `knockout` from your JavaScript as you normally do.
+Reference `knockout` from your JavaScript as you normally do with Rails 3.1 Assets Pipeline.
 
 
 # Usage
