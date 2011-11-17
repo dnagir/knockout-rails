@@ -2,6 +2,7 @@
 
 - Support collections (fetch multiple records)
 - Client side validation
+- JST templating support
 
 # 0.0.1 - 17 November 2011
 Initial release. Bare bones moved over from other project. Includes:
