@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Knockout do
+describe KnockoutRails do
   subject { assets }
 
   it { should serve 'knockout' }

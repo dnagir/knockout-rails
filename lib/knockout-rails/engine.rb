@@ -1,6 +1,6 @@
 require 'rails'
 
-module Knockout
+module KnockoutRails
   class Engine < Rails::Engine
   end
 end

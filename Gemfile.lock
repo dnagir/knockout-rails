@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    knockout (0.0.1)
+    knockout-rails (0.0.1)
       execjs
       jquery-rails
       sprockets (>= 2.0.0)
@@ -124,7 +124,7 @@ PLATFORMS
 DEPENDENCIES
   coffee-script
   jquery-rails
-  knockout!
+  knockout-rails!
   pry
   rails (>= 3.1.1)
   rspec

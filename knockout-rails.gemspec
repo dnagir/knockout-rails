@@ -1,17 +1,17 @@
 # -*- encoding: utf-8 -*-
 $:.push File.expand_path("../lib", __FILE__)
-require "knockout/version"
+require "knockout-rails/version"
 
 Gem::Specification.new do |s|
-  s.name        = "knockout"
-  s.version     = Knockout::Version::VERSION
+  s.name        = "knockout-rails"
+  s.version     = KnockoutRails::VERSION
   s.authors     = ["Dmytrii Nagirniak"]
   s.email       = ["dnagir@gmail.com"]
-  s.homepage    = "http://github.com/dnagir/knockout"
+  s.homepage    = "http://github.com/dnagir/knockout-rails"
   s.summary     = %q{Knockout.JS library for Rails Assets Pipeline with convenient Backbone/Spine-like Rails extensions.}
   s.description = %q{Include the knockout.js and some of its extensions so you can pick what you need. Adds the support for models and interation with the Rails backend.}
 
-  s.rubyforge_project = "knockout"
+  s.rubyforge_project = "knockout-rails"
 
   s.add_dependency             'sprockets', '>= 2.0.0'
   s.add_dependency             'execjs'
