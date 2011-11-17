@@ -32,7 +32,22 @@ TODO: Describe
 - Source hosted at [GitHub](https://github.com/dnagir/knockout-rails)
 - Report issues and feature requests to [GitHub Issues](https://github.com/dnagir/knockout-rails/issues)
 
-Pull requests are very welcome!
+Setup (asuming you already cloned the repo in cd-d into it):
+
+```bash
+bundle install
+# Now run the Ruby specs
+bundle exec rspec spec/
+# Now start JavaScript server for specs:
+cd spec/dummy
+bundle exec rails s
+# go to http://localhost:3000/jasmine to see the results
+```
+
+Now you can go to `spec/javascripts` and start writing your specs and then modify stuff in `lib/assets/javascripts` to pass those.
+
+
+Pull requests are very welcome, but please include the specs.
 
 # License
 

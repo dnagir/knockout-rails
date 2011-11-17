@@ -10,6 +10,8 @@ require 'sprockets/railtie'
 Bundler.require
 require "knockout-rails"
 
+require 'jasminerice'
+
 module Dummy
   class Application < Rails::Application
     # Settings in config/environments/* take precedence over those specified here.
@@ -42,6 +44,7 @@ module Dummy
 
     # Enable the asset pipeline
     config.assets.enabled = true
+    config.assets.paths << File.join(Rails.root, "../", "javascripts")
 
     # Version of your assets, change this if you want to expire all your assets
     config.assets.version = '1.0'
