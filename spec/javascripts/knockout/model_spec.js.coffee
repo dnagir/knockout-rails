@@ -1,9 +1,27 @@
-describe "Model", ->
-  it "comming soon"
+class Page extends ko.Model
+ @configure 'page'
 
-  it "should create observable attributes"
-  it "should set an id"
-  it "should determine if record is persisted or not"
+
+describe "Model", ->
+
+  beforeEach ->
+    @page = new Page
+      id: 123
+      name: 'Home'
+      content: 'Hello'
+
+
+  it "should create observable attributes", ->
+    expect(@page.name()).toBe 'Home'
+    expect(@page.content()).toBe 'Hello'
+
+  it "should set an id", -> expect(@page.id()).toBe 123
+
+  it "should determine if record is persisted or not", ->
+    @page.id(111)
+    expect(@page.persisted()).toBeTruthy()
+    @page.id(null)
+    expect(@page.persisted()).toBeFalsy()
 
   describe "Ajax", ->
 

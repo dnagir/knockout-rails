@@ -1,2 +1,2 @@
-#=require application
+#=require knockout
 #=require_tree ./

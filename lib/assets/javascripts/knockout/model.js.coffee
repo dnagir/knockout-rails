@@ -1,7 +1,7 @@
 
 # Module is taken from Spine.js
 moduleKeywords = ['included', 'extended']
-class @ko.Module
+class Module
   @include: (obj) ->
     throw('include(obj) requires obj') unless obj
     for key, value of obj when key not in moduleKeywords
@@ -19,7 +19,14 @@ class @ko.Module
 
 Ajax =
   ClassMethods:
+    configure: (@className) ->
+      @getUrl ||= (model) ->
+        return model.getUrl(model) if model and model.getUrl
+        collectionUrl = "/#{className.toLowerCase()}s"
+        collectionUrl += "/#{model.id()}" if model?.id()
+        collectionUrl
     extended: -> @include Ajax.InstanceMethods
+
 
   InstanceMethods:
     ignore:  -> []
@@ -58,12 +65,6 @@ Ajax =
         .done (resp, status, xhr)-> @updateErrors {}
         #.always (xhr, status) -> console.info "always: ", this
 
-  configure: (@className) ->
-    @getUrl ||= (model) ->
-      return model.getUrl(model) if model and model.getUrl
-      collectionUrl = "/#{className.toLowerCase()}s"
-      collectionUrl += "/#{model.id()}" if model?.id()
-      collectionUrl
 
 
 class Model extends Module
