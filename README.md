@@ -2,7 +2,7 @@
 
 If you have any questions please contact me [@dnagir](http://www.ApproachE.com).
 
-TODO: do describe properly
+This provides a set of conveniences for you to use more like Backbone or Spine, but still fully leveraging KnockoutJS.
 
 # Install
 
@@ -19,7 +19,7 @@ Reference `knockout` from your JavaScript as you normally do.
 
 # Usage
 
-After you've referenced the `knockout` you can create your first persitent Model.
+After you've referenced the `knockout` you can create your first persistent Model.
 
 ```coffee
 class Page extends ko.Model
@@ -30,7 +30,7 @@ Too simple. This model conforms to the response of [inherited_resources](https:/
 
 
 Now you can create the model in your HTML.
-Not that we don't do a roundtrip to fetch the data as we already have it when rendering the page.
+*Note* that we don't do a roundtrip to fetch the data as we already have it when rendering the view.
 
 ```haml
 = content_for :script do
@@ -46,14 +46,14 @@ Of course you can manipulate the object as you wish:
 
 ```coffee
 page.name 'Updated page'
-page.save()
-# saves it to the server using PUT: /pages/123
+page.save() # saves it to the server using PUT: /pages/123
 page.name '' # Assign an invalid value that is validated on the server
 request = page.save() # returns the jQuery Deferred, so you can chain into it when necessary
 request.always (xhr, status) ->
   # The response is 422 with JSON: {name: ["invalid name", "should not be blank"]}
   # And now we have the errors set automatically!
   page.errors.name() # "invalid name, should not be blank"
+  # even more than that, errors are already bound and shown in the HTML (see the view below)
 ```
 
 Now let's see how we can show the validation errors on the page and bind everything together.
@@ -76,13 +76,13 @@ Now let's see how we can show the validation errors on the page and bind everyth
 
 - Source hosted at [GitHub](https://github.com/dnagir/knockout-rails)
 - Report issues and feature requests to [GitHub Issues](https://github.com/dnagir/knockout-rails/issues)
-- Ping me on Twitter for quicky thing [@dnagir](https://twitter.com/#!/dnagir)
-- Look at the `HISTORY.md` file for current todo list and other details.
+- Ping me on Twitter for quickly thing [@dnagir](https://twitter.com/#!/dnagir)
+- Look at the `HISTORY.md` file for current TODO list and other details.
 
 
 ## Setup
 
-Asuming you already cloned the repo in cd-d into it:
+Assuming you already cloned the repo in cd-d into it:
 
 ```bash
 bundle install
@@ -97,8 +97,8 @@ bundle exec rails s
 Now you can go to `spec/javascripts` and start writing your specs and then modify stuff in `lib/assets/javascripts` to pass those.
 
 
-Pull requests are very welcome, but please include the specs.
+Pull requests are very welcome, but please include the specs! It's extremely easy to write those!
 
 # License
 
-TODO
+[MIT] (http://www.opensource.org/licenses/mit-license.php)
