@@ -19,11 +19,13 @@ Reference `knockout` from your JavaScript as you normally do.
 
 # Usage
 
+## Model
+
 After you've referenced the `knockout` you can create your first persistent Model.
 
 ```coffee
 class Page extends ko.Model
-  @configure 'page' # This is enough to make save the model usng REST under `/pages` URL
+  @configure 'page' # This is enough to save the model RESTfully to `/pages/{id}` URL
 ```
 
 Too simple. This model conforms to the response of [inherited_resources](https://github.com/josevalim/inherited_resources) Gem.
