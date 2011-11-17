@@ -57,7 +57,7 @@ Ajax =
         statusCode:
           422: (xhr, status, errorThrown)->
             errorData = JSON.parse xhr.responseText
-            console.debug("Validation error: ", errorData) if console?.debug?
+            console?.debug?("Validation error: ", errorData)
             @updateErrors(errorData)
 
       $.ajax(params)
