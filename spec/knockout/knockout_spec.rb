@@ -1,7 +1,14 @@
 require 'spec_helper'
 
 describe Knockout do
-  it "should have rails Engine" do
-    ::Knockout::Engine.should_not be_nil
-  end
+  subject { assets }
+
+  it { should serve 'knockout' }
+  it { should serve 'knockout/knockout' }
+  it { should serve 'knockout/knockout.mapping' }
+  it { should serve 'knockout/sugar-1.1.1.min' }
+
+  it { should serve 'knockout/model' }
+  it { should serve 'knockout/observables' }
+  it { should serve 'knockout/bindings' }
 end
