@@ -95,7 +95,7 @@ Please see the specs for more detailed instruction on how to use the specific bi
 
 - Source hosted at [GitHub](https://github.com/dnagir/knockout-rails)
 - Report issues and feature requests to [GitHub Issues](https://github.com/dnagir/knockout-rails/issues)
-- Ping me on Twitter for quickly thing [@dnagir](https://twitter.com/#!/dnagir)
+- Ping me on Twitter [@dnagir](https://twitter.com/#!/dnagir)
 - Look at the `HISTORY.md` file for current TODO list and other details.
 
 
