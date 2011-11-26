@@ -73,8 +73,10 @@ Now let's see how we can show the validation errors on the page and bind everyth
 
 ## Bindings
 
-This gem also includes useful bindings that you may require from your application.
+This gem also includes useful bindings that you may find useful in your application.
 For example, you can use `autosave` binding by requiring `knockout/bindings/autosave`.
+
+Or if you want to include all of the bindings available, then require `knockout/bindings/all`.
 
 Please see the specs for more detailed instruction on how to use specific binding.
 
