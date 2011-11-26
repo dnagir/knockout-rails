@@ -4,10 +4,10 @@
 - Client side validation
 - JST templating support
 
-# 0.0.2 - 26 November 2011
+# 0.0.2-3 - 26 November 2011
 
 - do not require bindings automatically
-- includes bindings: autosave, inplace, onoff, color
+- includes bindings: autosave, inplace, onoff, color, animate
 
 # 0.0.1 - 17 November 2011
 Initial release. Bare bones moved over from other project. Includes:
