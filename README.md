@@ -85,7 +85,7 @@ The list of currently available bindings:
 - `inplace` - converts the input elements into inplace editing with 'Edit'/'Done' buttons. Apply it on `input` elements similarly to the `value` binding.
 - `color` - converts an element into a color picker. Apply it to a `div` element: `color: page.fontColor`. Depends on [pakunok](https://github.com/dnagir/pakunok) gem (specifically - its `colorpicker` asset).
 - `onoff` - Converts checkboxes into iOS on/off buttons. Example: `onoff: page.isPublic`. It depends on [ios-chechboxes](https://github.com/dnagir/ios-checkboxes) gem.
-- 'animate' - runs the animation. Example: `animate: {width: quotaUsed, height: quotaUsed(), duration: 2000}`.
+- `animate` - runs the animation when dependent attributes change. Example: `animate: {width: quotaUsed, height: quotaUsed(), duration: 2000}`.
 
 Please see the specs for more detailed instruction on how to use the specific binding.
 
