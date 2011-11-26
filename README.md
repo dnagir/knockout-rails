@@ -71,6 +71,20 @@ Now let's see how we can show the validation errors on the page and bind everyth
         %span.inline-error{:data=>{:bind=>'visible: errors.name, text: errors.name'}}
 ```
 
+## Bindings
+
+This gem also includes useful bindings that you may require from your application.
+For example, you can use `autosave` binding by requiring `knockout/bindings/autosave`.
+
+Please see the specs for more detailed instruction on how to use specific binding.
+
+The list of currently available bindings:
+
+- `autosave` - automatically persists the model whenever any of its attributes change.
+  Apply it to a `form` element. Examples: `autosave: page`, `autosave: {model: page, when: page.isEnabled, unless: viewModel.doNotSave }`.
+- `inplace` - converts the input elements into inplace editing with 'Edit'/'Done' buttons. Apply it on `input` elements similarly to the `value` binding.
+- `color` - converts an element into a color picker. Apply it to a `div` element: `color: page.fontColor`. Depends on [pakunok](https://github.com/dnagir/pakunok) gem (specifically - its `colorpicker` asset).
+- `onoff` - Converts checkboxes into iOS on/off buttons. Example: `onoff: page.isPublic`. It depends on [ios-chechboxes](https://github.com/dnagir/ios-checkboxes) gem.
 
 # Development
 

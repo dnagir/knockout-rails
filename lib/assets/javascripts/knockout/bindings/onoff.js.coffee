@@ -2,7 +2,6 @@
 
 ko.bindingHandlers.onoff =
   init: (element, valueAccessor, allBindingsAccessor) ->
-
     initialValue = ko.utils.unwrapObservable valueAccessor()
     $(element).prop('checked', initialValue).iphoneStyle
       handleMargin: 0

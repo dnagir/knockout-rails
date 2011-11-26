@@ -1,3 +1,4 @@
+#=require jquery
 
 # Module is taken from Spine.js
 moduleKeywords = ['included', 'extended']
