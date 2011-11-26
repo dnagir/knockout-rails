@@ -9,7 +9,7 @@ This provides a set of conveniences for you to use more like Backbone or Spine, 
 Add it to your Rails application's `Gemfile`:
 
 ```ruby
-gem 'knockout'
+gem 'knockout-rails'
 ```
 
 Then `bundle install`.
