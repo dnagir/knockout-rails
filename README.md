@@ -78,8 +78,6 @@ For example, you can use `autosave` binding by requiring `knockout/bindings/auto
 
 Or if you want to include all of the bindings available, then require `knockout/bindings/all`.
 
-Please see the specs for more detailed instruction on how to use specific binding.
-
 The list of currently available bindings:
 
 - `autosave` - automatically persists the model whenever any of its attributes change.
@@ -87,6 +85,9 @@ The list of currently available bindings:
 - `inplace` - converts the input elements into inplace editing with 'Edit'/'Done' buttons. Apply it on `input` elements similarly to the `value` binding.
 - `color` - converts an element into a color picker. Apply it to a `div` element: `color: page.fontColor`. Depends on [pakunok](https://github.com/dnagir/pakunok) gem (specifically - its `colorpicker` asset).
 - `onoff` - Converts checkboxes into iOS on/off buttons. Example: `onoff: page.isPublic`. It depends on [ios-chechboxes](https://github.com/dnagir/ios-checkboxes) gem.
+- 'animate' - runs the animation. Example: `animate: {width: quotaUsed, height: quotaUsed(), duration: 2000}`.
+
+Please see the specs for more detailed instruction on how to use the specific binding.
 
 # Development
 
