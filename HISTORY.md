@@ -1,8 +1,13 @@
-# 0.0.2 - in progress
+# 0.0.3 - in progress
 
 - Support collections (fetch multiple records)
 - Client side validation
 - JST templating support
+
+# 0.0.2 - 26 November 2011
+
+- do not require bindings automatically
+- includes bindings: autosave, inplace, onoff, color
 
 # 0.0.1 - 17 November 2011
 Initial release. Bare bones moved over from other project. Includes:
