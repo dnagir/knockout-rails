@@ -1,7 +1,10 @@
 class Page extends ko.Model
- @configure 'page'
- @on 'sayHi', (hi) ->
-   @sayHi = hi
+  @configure 'page'
+  @upon 'sayHi', (hi) ->
+    @sayHi = hi
+ 
+  @beforeSave ->
+    @beforeSaved = true
 
 
 describe "Model", ->
@@ -95,8 +98,9 @@ describe "Model", ->
       expect(@page.sayHi).toBe 'abc'
 
   describe "callbacks", ->
-    it "beforeSave should be called ", -> expect('tbd').toBe 'done'
-    it "beforeValidation should be called", -> expect('tbd').toBe 'done'
+    it "beforeSave should be called ", ->
+      @page.save()
+      expect(@page.beforeSaved).toBeTruthy()
 
   describe "validations", ->
     it "should execute the validator", -> expect('tbd').toBe 'done'

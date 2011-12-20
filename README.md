@@ -156,7 +156,7 @@ class @Page extends ko.Model
   @configure 'page'
 
   # Subscribe to 'sayHi' event
-  @on 'sayHi', (name) ->
+  @upon 'sayHi', (name) ->
     alert name + @name
 
 page = Page.new name: 'Home'
@@ -175,22 +175,16 @@ Some of them are:
 class @Page extends ko.Model
   @configure 'page'
 
-  beforeSave: ->
+  @beforeSave ->
     @age = @birthdate - new Date()
-
-  beforeValidation: ->
-    @name ||= 'Default page'
 
 # This would be similar to
 
 class @Page extends ko.Model
   @configure 'page'
 
-  on 'beforeSave', ->
+  @on 'beforeSave', ->
     @age = @birthdate - new Date()
-
-  on 'beforeValidation', ->
-    @name ||= 'Default page'
 ```
 
 

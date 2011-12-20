@@ -19,11 +19,13 @@ class Module
     
 Events =
   ClassMethods:
-    extended: -> @include Events.InstanceMethods
-    on: (eventName, callback) ->
+    extended: ->
       @events ||= {}
+      @include Events.InstanceMethods
+    upon: (eventName, callback) ->
       @events[eventName] || = []
       @events[eventName].push callback
+      this # Just to chain it if we need to
 
   InstanceMethods:
     trigger: (eventName, args...) ->
@@ -34,9 +36,7 @@ Events =
 
 Callbacks =
   ClassMethods:
-    tbd: ->
-  InstanceMethods:
-    tbd: ->
+    beforeSave: (callback) -> @upon('beforeSave', callback)
 
 Ajax =
   ClassMethods:
@@ -62,6 +62,7 @@ Ajax =
     toJSON: -> ko.mapping.toJS @, @mapping()
 
     save: ->
+      @trigger('beforeSave') # Consider moving it into the beforeSend or similar
       data = {}
       data[@constructor.className] =@toJSON()
       params =
