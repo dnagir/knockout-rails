@@ -4,7 +4,7 @@
 - Client side validation
 - JST templating support
 
-# 0.0.4 - 20 December 2011
+# 0.0.4-5 - 20 December 2011
 
 - Fix to inplace edit to be able to switch back to view mode when no value has changed
 
