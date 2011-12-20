@@ -36,7 +36,9 @@ ko.bindingHandlers.inplace =
       e.preventDefault()
       if editing element
         updateValue element, valueAccessor
-      toggle element, valueAccessor
+        showInput element, false, valueAccessor
+      else
+        toggle element, valueAccessor
 
 
   update: (element, valueAccessor) ->
