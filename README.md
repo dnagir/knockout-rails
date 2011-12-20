@@ -75,7 +75,6 @@ Now let's see how we can show the validation errors on the page and bind everyth
 
 If you are using the model, you can also take advantage of the client-side validation framework.
 
-
 The piece of code below should explain everything, including some of the options.
 
 ```coffee
@@ -118,8 +117,12 @@ It is recommended to avoid custom inline validations and create your own validat
 ko.validators.funky = (model, fields, options) ->
   # options - is an optional set of options passed to the validator
   word = options.word || 'funky'
+  result = {}
   fields.each (field) ->
-    model.error[field]("should be #{word}") if model[field]().indexOf(word) < 0
+    result[field] = "should be #{word}" if model[field]().indexOf(word) < 0
+
+  # you MUST return a hash of field-error or empty hash/null for no errors
+  return result 
 ```
 
 so that you can use it like so:
@@ -127,6 +130,18 @@ so that you can use it like so:
 ```coffee
 validates: (page) ->
   funky 'name', {word: 'yakk'}
+```
+
+Here's how you would check whether the model is valid or not (assuming presence validation on `name` field):
+
+```coffee
+page = new @Page name: ''
+page.isValid() # false
+
+page.name = 'Home'
+page.isValid() # true
+
+page.performValidation() # To force the validation, you don't need to do that really
 ```
 
 Every validator has its own set of options.
