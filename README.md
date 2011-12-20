@@ -24,7 +24,7 @@ Reference `knockout` from your JavaScript as you normally do with Rails 3.1 Asse
 After you've referenced the `knockout` you can create your first persistent Model.
 
 ```coffee
-class Page extends ko.Model
+class @Page extends ko.Model
   @configure 'page' # This is enough to save the model RESTfully to `/pages/{id}` URL
 ```
 
