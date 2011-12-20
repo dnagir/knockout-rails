@@ -156,7 +156,7 @@ class @Page extends ko.Model
   @configure 'page'
 
   # Subscribe to 'sayHi' event
-  on 'sayHi', (name) ->
+  @on 'sayHi', (name) ->
     alert name + @name
 
 page = Page.new name: 'Home'

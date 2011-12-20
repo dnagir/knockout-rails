@@ -1,10 +1,13 @@
 class Page extends ko.Model
  @configure 'page'
+ @on 'sayHi', (hi) ->
+   @sayHi = hi
 
 
 describe "Model", ->
 
   beforeEach ->
+    jasmine.Ajax.useMock()
     @page = new Page
       id: 123
       name: 'Home'
@@ -24,9 +27,6 @@ describe "Model", ->
     expect(@page.persisted()).toBeFalsy()
 
   describe "Ajax", ->
-    beforeEach ->
-      jasmine.Ajax.useMock()
-
     it "should return jQuery deferred when saving", ->
       expect( @page.save().done ).toBeTruthy()
 
@@ -56,6 +56,12 @@ describe "Model", ->
           name: 'Home'
           content: 'Hello'
 
+    it "should not save if invalid", ->
+      @page.errors.name = 'whatever'
+      expect(@page.save()).toBeFalsy()
+      mostRecentAjaxRequest().toBeFalsy()
+
+
     describe "errors", ->
       it "should have errors for fields", ->
         e = @page.errors
@@ -82,4 +88,17 @@ describe "Model", ->
             status: 422
             responseText: '{"name": ["got ya", "really"]}'
           expect( @page.errors.name() ).toBe "got ya, really"
+
+  describe "events", ->
+    it "should raise events", ->
+      @page.trigger('sayHi', 'abc')
+      expect(@page.sayHi).toBe 'abc'
+
+  describe "callbacks", ->
+    it "beforeSave should be called ", -> expect('tbd').toBe 'done'
+    it "beforeValidation should be called", -> expect('tbd').toBe 'done'
+
+  describe "validations", ->
+    it "should execute the validator", -> expect('tbd').toBe 'done'
+    it "should revalidate when field changes", -> expect('tbd').toBe 'done'
 

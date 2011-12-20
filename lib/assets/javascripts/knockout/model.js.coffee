@@ -17,6 +17,26 @@ class Module
     obj.extended?.apply(@)
     @
     
+Events =
+  ClassMethods:
+    extended: -> @include Events.InstanceMethods
+    on: (eventName, callback) ->
+      @events ||= {}
+      @events[eventName] || = []
+      @events[eventName].push callback
+
+  InstanceMethods:
+    trigger: (eventName, args...) ->
+      events = @constructor.events
+      handlers = events[eventName] || []
+      callback.apply(this, args) for callback in handlers
+      this # so that we can chain
+
+Callbacks =
+  ClassMethods:
+    tbd: ->
+  InstanceMethods:
+    tbd: ->
 
 Ajax =
   ClassMethods:
@@ -70,6 +90,8 @@ Ajax =
 
 class Model extends Module
   @extend Ajax.ClassMethods
+  @extend Events.ClassMethods
+  @extend Callbacks.ClassMethods
 
   constructor: (json) ->
     me = this
