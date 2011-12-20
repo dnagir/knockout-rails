@@ -38,9 +38,20 @@ Callbacks =
   ClassMethods:
     beforeSave: (callback) -> @upon('beforeSave', callback)
 
+Validations =
+  ClassMethods:
+    extended: -> @include Validations.InstanceMethods
+
+  InstanceMethods:
+    isValid: ->
+      return true unless @errors
+      for key, value of @errors
+        return false unless Object.isEmpty value()
+      return true
+
 Ajax =
   ClassMethods:
-    configure: (@className) ->
+    persistAt: (@className) ->
       @getUrl ||= (model) ->
         return model.getUrl(model) if model and model.getUrl
         collectionUrl = "/#{className.toLowerCase()}s"
@@ -62,6 +73,8 @@ Ajax =
     toJSON: -> ko.mapping.toJS @, @mapping()
 
     save: ->
+      allowSaving = @isValid()
+      return false unless allowSaving
       @trigger('beforeSave') # Consider moving it into the beforeSend or similar
       data = {}
       data[@constructor.className] =@toJSON()
@@ -93,11 +106,15 @@ class Model extends Module
   @extend Ajax.ClassMethods
   @extend Events.ClassMethods
   @extend Callbacks.ClassMethods
+  @extend Validations.ClassMethods
+
+  @fields: (fieldNames) -> @fieldNames = fieldNames
 
   constructor: (json) ->
     me = this
     @set json
     @id ||= ko.observable()
+    # Heavy, heavy binding to `this`...
     @mapping().ignore.exclude('constructor').filter (v)->
         not v.startsWith('_') and Object.isFunction me[v]
       .forEach (fn) ->
@@ -108,14 +125,16 @@ class Model extends Module
 
     @persisted = ko.dependentObservable -> !!me.id()
 
-  proxy: -> @mapping().ignore
-
   set: (json) ->
     ko.mapping.fromJS json, @mapping(), @
     me = this
     @errors ||= {}
     ignores = @mapping().ignore
-    for key, value of this
+    availableFields = @constructor.fieldNames
+    availableFields ||= @constructor.fields Object.keys(json) # Configure fields unless done manually
+
+    #for key, value of json
+    for key in availableFields
       @errors[key] ||= ko.observable() unless ignores.indexOf(key) >= 0
     @
 

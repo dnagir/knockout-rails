@@ -1,5 +1,5 @@
 class Page extends ko.Model
-  @configure 'page'
+  @persistAt 'page'
   @upon 'sayHi', (hi) ->
     @sayHi = hi
  
@@ -60,12 +60,19 @@ describe "Model", ->
           content: 'Hello'
 
     it "should not save if invalid", ->
-      @page.errors.name = 'whatever'
+      @page.errors.name 'whatever'
       expect(@page.save()).toBeFalsy()
-      mostRecentAjaxRequest().toBeFalsy()
-
+      expect(mostRecentAjaxRequest()).toBeFalsy()
 
     describe "errors", ->
+
+      it "should have errors on fields only", ->
+        keys = Object.keys(@page.errors)
+        expect(keys).toContain 'id'
+        expect(keys).toContain 'name'
+        expect(keys).toContain 'content'
+        expect(keys.length).toBe 3
+
       it "should have errors for fields", ->
         e = @page.errors
         e.name('a')
@@ -75,13 +82,12 @@ describe "Model", ->
         expect(e.content()).toBe 'b'
 
       describe "on 200 response", ->
-        it "should clear all errors", ->
-          @page.errors.name('something is incorrect for whatever reason')
-          @page.save() # Probably we should not allow to save in the first place
+        it "should be valid", ->
+          @page.save()
           mostRecentAjaxRequest().response
             status: 200
             responseText: "{}"
-          expect( @page.errors.name() ).toBeFalsy()
+          expect( @page.isValid() ).toBeTruthy()
               
 
       describe "on 422 resposne (unprocessible entity = validation error)", ->
@@ -103,6 +109,13 @@ describe "Model", ->
       expect(@page.beforeSaved).toBeTruthy()
 
   describe "validations", ->
+    it "should be valid", ->
+      expect(@page.isValid()).toBeTruthy()
+
+    it "should be invalid", ->
+      @page.errors.name 'Boom'
+      expect(@page.isValid()).toBeFalsy()
+
     it "should execute the validator", -> expect('tbd').toBe 'done'
     it "should revalidate when field changes", -> expect('tbd').toBe 'done'
 

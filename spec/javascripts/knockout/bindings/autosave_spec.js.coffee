@@ -1,7 +1,7 @@
 #= require knockout/bindings/autosave
 
 class Page extends ko.Model
-  @configure 'page'
+  @persistAt 'page'
 
 describe "AutoSave", ->
   beforeEach ->

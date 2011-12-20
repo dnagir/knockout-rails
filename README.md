@@ -25,7 +25,8 @@ After you've referenced the `knockout` you can create your first persistent Mode
 
 ```coffee
 class @Page extends ko.Model
-  @configure 'page' # This is enough to save the model RESTfully to `/pages/{id}` URL
+  @persistAt 'page' # This is enough to save the model RESTfully to `/pages/{id}` URL
+  @fields ['id', 'name', 'whatever'] # This is optional and will be inferred if not used
 ```
 
 Too simple. This model conforms to the response of [inherited_resources](https://github.com/josevalim/inherited_resources) Gem.
@@ -79,7 +80,7 @@ The piece of code below should explain everything, including some of the options
 
 ```coffee
 class @Page extends ko.Model
-  @configure 'page'
+  @persistAt 'page'
 
   validates: (page) ->
     acceptance  'agree_to_terms' # Value is truthy
@@ -153,7 +154,7 @@ But it is really up to the falidator how to treat those.
 
 ```coffee
 class @Page extends ko.Model
-  @configure 'page'
+  @persistAt 'page'
 
   # Subscribe to 'sayHi' event
   @upon 'sayHi', (name) ->
@@ -173,7 +174,7 @@ Some of them are:
 
 ```coffee
 class @Page extends ko.Model
-  @configure 'page'
+  @persistAt 'page'
 
   @beforeSave ->
     @age = @birthdate - new Date()
@@ -181,7 +182,7 @@ class @Page extends ko.Model
 # This would be similar to
 
 class @Page extends ko.Model
-  @configure 'page'
+  @persistAt 'page'
 
   @on 'beforeSave', ->
     @age = @birthdate - new Date()
