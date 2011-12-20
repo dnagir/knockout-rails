@@ -40,3 +40,12 @@ describe "In-Place edit", ->
     el.val('updated')
     el.parent().find('.inline-button').click() # Done
     expect( val() ).toBe 'updated'
+
+  it "should switch from Edit mode when nothing has been changed", ->
+    val = ko.observable 'hiii'
+    el = inplacify val
+    button = el.parent().find('.inline-button')
+    button.click() # Editing (Done label)
+    button.click() # Showing -> (Edit label)
+    expect(button).toHaveText('Edit')
+    expect(el.parent().find('.editable-content')).toBeVisible()
