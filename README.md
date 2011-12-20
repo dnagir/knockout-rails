@@ -134,6 +134,51 @@ Every validator has its own set of options.
 The general format of the validator is: `validatorName field1, field2, field3, {optional: options, asA: hash}`.
 But it is really up to the falidator how to treat those.
 
+## Model Events
+
+```coffee
+class @Page extends ko.Model
+  @configure 'page'
+
+  # Subscribe to 'sayHi' event
+  on 'sayHi', (name) ->
+    alert name + @name
+
+page = Page.new name: 'Home'
+page.trigger 'sayHi', 'Hi '
+# will show "Hi Home"
+
+```
+
+
+## Model Callbacks
+
+The callbacks are just convenience wrappers over the predefined events.
+Some of them are:
+
+```coffee
+class @Page extends ko.Model
+  @configure 'page'
+
+  beforeSave: ->
+    @age = @birthdate - new Date()
+
+  beforeValidation: ->
+    @name ||= 'Default page'
+
+# This would be similar to
+
+class @Page extends ko.Model
+  @configure 'page'
+
+  on 'beforeSave', ->
+    @age = @birthdate - new Date()
+
+  on 'beforeValidation', ->
+    @name ||= 'Default page'
+```
+
+
 ## Bindings
 
 This gem also includes useful bindings that you may find useful in your application.
