@@ -71,6 +71,69 @@ Now let's see how we can show the validation errors on the page and bind everyth
         %span.inline-error{:data=>{:bind=>'visible: errors.name, text: errors.name'}}
 ```
 
+## Model Validations
+
+If you are using the model, you can also take advantage of the client-side validation framework.
+
+
+The piece of code below should explain everything, including some of the options.
+
+```coffee
+class @Page extends ko.Model
+  @configure 'page'
+
+  validates: (page) ->
+    acceptance  'agree_to_terms' # Value is truthy
+    presence    'name', 'body' # Non-empty, non-blank stringish value
+    email       'author' # Valid email, blanks allowed
+
+    presence      'password'
+    confirmation  'passwordConfirmation', {:confirms => 'password'} # Blanks allowed
+
+    # numericality:
+    numericality  'rating'
+    numericality  'rating', {min: 1, max: 5}
+    
+    # Inclusion/exclusion
+    inclusion   'subdomain', ["mine", "yours"]
+    exclusion   'subdomain', ["www", "www2"] 
+
+    format      'code', /\d+/ # Regex validation, blanks allowed
+    length      'name', {min: 3, max: 10} # Stringish value should be with the range
+
+    # Custom message
+    presence    'name', {message: 'give me a name, yo!'}
+
+    # Conditional validation - use the `page` model passed in as argument
+    presence    'name' unless page.id?
+
+    # Custom inline validation
+    custom -> page.errors.name("should be funky") if page.name().indexOf('funky') < 0
+```
+
+It is recommended to avoid custom inline validations and create your own validators instead:
+
+
+```coffee
+ko.validators.funky = (model, fields, options) ->
+  # options - is an optional set of options passed to the validator
+  word = options.word || 'funky'
+  fields.each (field) ->
+    model.error[field]("should be #{word}") if model[field]().indexOf(word) < 0
+```
+
+so that you can use it like so:
+
+```coffee
+validates: (page) ->
+  funky 'name', {word: 'yakk'}
+```
+
+Every validator has its own set of options.
+
+The general format of the validator is: `validatorName field1, field2, field3, {optional: options, asA: hash}`.
+But it is really up to the falidator how to treat those.
+
 ## Bindings
 
 This gem also includes useful bindings that you may find useful in your application.
