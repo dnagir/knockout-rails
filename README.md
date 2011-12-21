@@ -108,7 +108,8 @@ class @Page extends ko.Model
     presence    'name' unless page.id?
 
     # Custom inline validation
-    custom -> page.errors.name("should be funky") if page.name().indexOf('funky') < 0
+    custom ->
+      {name: if page.name().indexOf('funky') < 0 then "should be funky" else null }
 ```
 
 It is recommended to avoid custom inline validations and create your own validators instead:

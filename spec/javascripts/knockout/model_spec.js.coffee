@@ -107,15 +107,3 @@ describe "Model", ->
     it "beforeSave should be called ", ->
       @page.save()
       expect(@page.beforeSaved).toBeTruthy()
-
-  describe "validations", ->
-    it "should be valid", ->
-      expect(@page.isValid()).toBeTruthy()
-
-    it "should be invalid", ->
-      @page.errors.name 'Boom'
-      expect(@page.isValid()).toBeFalsy()
-
-    it "should execute the validator", -> expect('tbd').toBe 'done'
-    it "should revalidate when field changes", -> expect('tbd').toBe 'done'
-
