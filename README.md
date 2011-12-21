@@ -82,49 +82,44 @@ The piece of code below should explain everything, including some of the options
 class @Page extends ko.Model
   @persistAt 'page'
 
-  validates: (page) ->
-    acceptance  'agree_to_terms' # Value is truthy
-    presence    'name', 'body' # Non-empty, non-blank stringish value
-    email       'author' # Valid email, blanks allowed
+  @validates: ->
+    @acceptance  'agree_to_terms' # Value is truthy
+    @presence    'name', 'body' # Non-empty, non-blank stringish value
+    @email       'author' # Valid email, blanks allowed
 
-    presence      'password'
-    confirmation  'passwordConfirmation', {:confirms => 'password'} # Blanks allowed
+    @presence      'password'
+    @confirmation  'passwordConfirmation', {confirms: 'password'} # Blanks allowed
 
     # numericality:
-    numericality  'rating'
-    numericality  'rating', {min: 1, max: 5}
-    
-    # Inclusion/exclusion
-    inclusion   'subdomain', ["mine", "yours"]
-    exclusion   'subdomain', ["www", "www2"] 
+    @numericality  'rating'
+    @numericality  'rating', {min: 1, max: 5}
 
-    format      'code', /\d+/ # Regex validation, blanks allowed
-    length      'name', {min: 3, max: 10} # Stringish value should be with the range
+    # Inclusion/exclusion
+    @inclusion   'subdomain', ["mine", "yours"]
+    @exclusion   'subdomain', ["www", "www2"] 
+
+    @format      'code', /\d+/ # Regex validation, blanks allowed
+    @length      'name', {min: 3, max: 10} # Stringish value should be with the range
 
     # Custom message
-    presence    'name', {message: 'give me a name, yo!'}
+    @presence    'name', {message: 'give me a name, yo!'}
 
     # Conditional validation - use the `page` model passed in as argument
-    presence    'name' unless page.id?
+    @presence    'name' unless page.id?
 
     # Custom inline validation
-    custom ->
-      {name: if page.name().indexOf('funky') < 0 then "should be funky" else null }
+    @custom 'name', (valueAccessor, options) ->
+      if (valueAccessor() || '').indexOf('funky') < 0 then "should be funky" else null
 ```
 
 It is recommended to avoid custom inline validations and create your own validators instead:
 
 
 ```coffee
-ko.validators.funky = (model, fields, options) ->
+ko.Validations.validators.funky = (model, field, options) ->
   # options - is an optional set of options passed to the validator
   word = options.word || 'funky'
-  result = {}
-  fields.each (field) ->
-    result[field] = "should be #{word}" if model[field]().indexOf(word) < 0
-
-  # you MUST return a hash of field-error or empty hash/null for no errors
-  return result 
+  if model[field]().indexOf(word) < 0 "should be #{word}" else null
 ```
 
 so that you can use it like so:

@@ -1,9 +1,11 @@
 
 class Page extends ko.Model
-  @fields 'name'
+  @fields 'name', 'correct'
 
   @validates: (me) ->
     @presence 'name'
+    @custom 'correct', (page, options) ->
+      unless page.correct() then 'should be correct' else null
 
 
 
@@ -20,3 +22,9 @@ describe "Validations", ->
     @subject.name ''
     @subject.name 'myself'
     expect(@subject.errors.name()).toBeFalsy()
+
+  it "should use custom validator", ->
+    @subject.correct yes
+    expect( @subject.errors.correct() ).toBeFalsy()
+    @subject.correct no
+    expect( @subject.errors.correct() ).toMatch /correct/
