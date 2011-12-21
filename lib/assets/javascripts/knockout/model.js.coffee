@@ -99,7 +99,9 @@ class Model extends Module
   @extend Callbacks.ClassMethods
   @extend ko.Validations.ClassMethods
 
-  @fields: (fieldNames...) -> @fieldNames = fieldNames
+  @fields: (fieldNames...) ->
+    fieldNames = fieldNames.flatten() # when a single arg is given as an array
+    @fieldNames = fieldNames
 
   constructor: (json) ->
     me = this
