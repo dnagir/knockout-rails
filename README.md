@@ -105,7 +105,7 @@ class @Page extends ko.Model
     @presence    'name', message: 'give me a name, yo!'
 
     # Conditional validation - access model using `this`
-    @presence    'name', if: -> @persisted()
+    @presence    'name', only: -> @persisted(), except: -> @id() > 5
 
     # Custom inline validation
     @custom 'name', (page) ->
