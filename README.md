@@ -147,6 +147,9 @@ Every validator has its own set of options. But the following are applied to all
 - `only: -> truthy or falsy` - only apply the validation when the condition is truthy. `this` points to the model so you can access it.
 - `except:` - is the opposite to only. Both `only` and `except` can be used, but you should make sure those are not mutually exclusive.
 
+
+And at the end of this exercise, you can bind the errors using `data-bind="text: page.error.name"` or any other technique.
+
 ## Model Events
 
 ```coffee
@@ -196,7 +199,7 @@ Or if you want to include all of the bindings available, then require `knockout/
 The list of currently available bindings:
 
 - `autosave` - automatically persists the model whenever any of its attributes change.
-  Apply it to a `form` element. Examples: `autosave: page`, `autosave: {model: page, when: page.isEnabled, unless: viewModel.doNotSave }`.
+  Apply it to a `form` element. Examples: `autosave: page`, `autosave: {model: page, when: page.isEnabled, unless: viewModel.doNotSave }`. *NOTE*: It will not save when a model is not valid.
 - `inplace` - converts the input elements into inplace editing with 'Edit'/'Done' buttons. Apply it on `input` elements similarly to the `value` binding.
 - `color` - converts an element into a color picker. Apply it to a `div` element: `color: page.fontColor`. Depends on [pakunok](https://github.com/dnagir/pakunok) gem (specifically - its `colorpicker` asset).
 - `onoff` - Converts checkboxes into iOS on/off buttons. Example: `onoff: page.isPublic`. It depends on [ios-chechboxes](https://github.com/dnagir/ios-checkboxes) gem.
