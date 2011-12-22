@@ -27,7 +27,7 @@ describe "Validations", ->
   it "should remove error when field becomes valid", ->
     @subject.name ''
     @subject.name 'myself'
-    expect(@subject.errors.name()).toBeFalsy()
+    expect(@subject.errors.name()).toBe null
 
   it "should use custom validator", ->
     @subject.correct yes

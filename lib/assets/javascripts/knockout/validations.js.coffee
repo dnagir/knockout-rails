@@ -33,8 +33,9 @@ class ValidationContext
       validator.call(me, me.subject, field, options) if shouldValidate
 
     validatorSubscriber.subscribe (newError) ->
-      err = me.subject.errors[field]
-      me.subject.errors[field]( [err(), newError].compact().join(", ")  )
+      currentError = me.subject.errors[field]
+      actualError = [currentError(), newError].exclude((x) -> !x).join(", ")
+      me.subject.errors[field]( actualError or null)
 
     # Clear the error only once before the value gets changed
     validatorSubscriber.subscribe ->
