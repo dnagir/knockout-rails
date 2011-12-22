@@ -105,11 +105,11 @@ class @Page extends ko.Model
     @presence    'name', {message: 'give me a name, yo!'}
 
     # Conditional validation - use the `page` model passed in as argument
-    @presence    'name' unless page.id?
+    @presence    'name', if: -> @persisted?
 
     # Custom inline validation
-    @custom 'name', (valueAccessor, options) ->
-      if (valueAccessor() || '').indexOf('funky') < 0 then "should be funky" else null
+    @custom 'name', (page) ->
+      if (page.name() || '').indexOf('funky') < 0 then "should be funky" else null
 ```
 
 It is recommended to avoid custom inline validations and create your own validators instead:
@@ -125,7 +125,7 @@ ko.Validations.validators.funky = (model, field, options) ->
 so that you can use it like so:
 
 ```coffee
-validates: (page) ->
+validates: ->
   funky 'name', {word: 'yakk'}
 ```
 

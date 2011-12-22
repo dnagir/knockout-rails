@@ -35,4 +35,3 @@ describe "Validations", ->
   it "should join all the errors", ->
     @subject.multiple ''
     expect(@subject.errors.multiple()).toBe "xxx, xxx, xxx"
-
