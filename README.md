@@ -26,7 +26,7 @@ After you've referenced the `knockout` you can create your first persistent Mode
 ```coffee
 class @Page extends ko.Model
   @persistAt 'page' # This is enough to save the model RESTfully to `/pages/{id}` URL
-  @fields ['id', 'name', 'whatever'] # This is optional and will be inferred if not used
+  @fields 'id', 'name', 'whatever' # This is optional and will be inferred if not used
 ```
 
 Too simple. This model conforms to the response of [inherited_resources](https://github.com/josevalim/inherited_resources) Gem.
@@ -76,7 +76,12 @@ Now let's see how we can show the validation errors on the page and bind everyth
 
 If you are using the model, you can also take advantage of the client-side validation framework.
 
-The piece of code below should explain everything, including some of the options.
+The client side validation works similarly to the server-side validation.
+This means there is only one place to check for errors, no matter where those are defined.
+
+For example - `page.errors.name()` returns the error message for the `name` field for both client and server side validations.
+
+The piece of code below should explain client-side validation, including some of the options.
 
 ```coffee
 class @Page extends ko.Model
