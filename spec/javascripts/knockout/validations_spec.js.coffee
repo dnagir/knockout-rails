@@ -1,9 +1,11 @@
 
 class Page extends ko.Model
-  @fields 'name', 'correct'
+  @fields 'name', 'correct', 'multiple'
 
   @validates: (me) ->
     @presence 'name'
+    @presence 'multiple', 'multiple', 'multiple', message: 'xxx'
+
     @custom 'correct', (page, options) ->
       unless page.correct() then 'should be correct' else null
 
@@ -28,3 +30,9 @@ describe "Validations", ->
     expect( @subject.errors.correct() ).toBeFalsy()
     @subject.correct no
     expect( @subject.errors.correct() ).toMatch /correct/
+
+
+  it "should join all the errors", ->
+    @subject.multiple ''
+    expect(@subject.errors.multiple()).toBe "xxx, xxx, xxx"
+

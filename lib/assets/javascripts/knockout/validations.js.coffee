@@ -12,7 +12,7 @@ class ValidationContext
     me = this
     dsl[name] = (fields..., options) ->
       if typeof(options) is 'string'
-        # Last argument isn't options - it's a field
+        # Last argument isn't `options` - it's a field
         fields.push options
         options = {}
       me.setValidator(func, field, options) for field in fields
@@ -20,14 +20,21 @@ class ValidationContext
 
   setValidator: (validator, field, options) ->
     me = this
+    me._validations ||= {}
+    me._validations[field] ||= []
+
     validatorSubscriber = ko.dependentObservable ->
       validator.call(me, me.subject, field, options)
 
     validatorSubscriber.subscribe (newError) ->
-      me.subject.errors[field]( newError )
+      err = me.subject.errors[field]
+      me.subject.errors[field]( [err(), newError].compact().join(", ")  )
 
-    me._validations ||= {}
-    me._validations[field] ||= []
+    # Clear the error only once before the value gets changed
+    validatorSubscriber.subscribe ->
+        me.subject.errors[field](null)
+      , me.subject, "beforeChange" if me._validations[field].isEmpty()
+
     me._validations[field].push validatorSubscriber
     me
 
@@ -56,9 +63,9 @@ ko.Validations.validators =
 
   presence: (model, field, options) ->
     val = model[field]()
-    isBlank = !val or (val.toString().match /^\s*$/)
+    isBlank = !val or val.toString().isBlank()
 
-    if isBlank then "can't be blank" else null
+    if isBlank then options.message || "can't be blank" else null
 
   email: (model, field, options) ->
     if model[field]()? then "should be valid email" else null
