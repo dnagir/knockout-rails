@@ -24,7 +24,13 @@ class ValidationContext
     me._validations[field] ||= []
 
     validatorSubscriber = ko.dependentObservable ->
-      validator.call(me, me.subject, field, options)
+      {only, except} = options
+      allowedByOnly = !only or only.call(me.subject)
+      deniedByExcept = except and except.call(me.subject)
+
+      shouldValidate = allowedByOnly and not deniedByExcept
+
+      validator.call(me, me.subject, field, options) if shouldValidate
 
     validatorSubscriber.subscribe (newError) ->
       err = me.subject.errors[field]

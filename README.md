@@ -105,7 +105,7 @@ class @Page extends ko.Model
     @presence    'name', {message: 'give me a name, yo!'}
 
     # Conditional validation - use the `page` model passed in as argument
-    @presence    'name', if: -> @persisted?
+    @presence    'name', if: -> @persisted()
 
     # Custom inline validation
     @custom 'name', (page) ->
@@ -134,17 +134,18 @@ Here's how you would check whether the model is valid or not (assuming presence 
 ```coffee
 page = new @Page name: ''
 page.isValid() # false
+page.errors.name() # "can't be blank"
 
 page.name = 'Home'
 page.isValid() # true
+page.errors.name() # null
 
-page.performValidation() # To force the validation, you don't need to do that really
 ```
 
-Every validator has its own set of options.
+Every validator has its own set of options. But the following are applied to all of them (including yours):
 
-The general format of the validator is: `validatorName field1, field2, field3, {optional: options, asA: hash}`.
-But it is really up to the falidator how to treat those.
+- `only: -> truthy or falsy` - only apply the validation when the condition is truthy. `this` points to the model so you can access it.
+- `except:` - is the opposite to only. Both `only` and `except` can be used, but you should make sure those are not mutually exclusive.
 
 ## Model Events
 
