@@ -95,10 +95,10 @@ class @Page extends ko.Model
     @numericality  'rating', min: 1, max: 5
 
     # Inclusion/exclusion
-    @inclusion   'subdomain', ["mine", "yours"]
-    @exclusion   'subdomain', ["www", "www2"] 
+    @inclusion   'subdomain', values: ["mine", "yours"]
+    @exclusion   'subdomain', values: ["www", "www2"] 
 
-    @format      'code', /\d+/ # Regex validation, blanks allowed
+    @format      'code', match: /\d+/ # Regex validation, blanks allowed
     @length      'name', min: 3, max: 10 # Stringish value should be with the range
 
     # Custom message
@@ -112,7 +112,7 @@ class @Page extends ko.Model
       if (page.name() || '').indexOf('funky') < 0 then "should be funky" else null
 ```
 
-It is recommended to avoid custom inline validations and create your own validators instead:
+It is recommended to avoid custom inline validations and create your own validators instead (and maybe submit it as a Pull Request):
 
 
 ```coffee
@@ -125,8 +125,8 @@ ko.Validations.validators.funky = (model, field, options) ->
 so that you can use it like so:
 
 ```coffee
-validates: ->
-  funky 'name', {word: 'yakk'}
+@validates: ->
+  funky 'name', word: 'yakk'
 ```
 
 Here's how you would check whether the model is valid or not (assuming presence validation on `name` field):
