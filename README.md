@@ -92,19 +92,19 @@ class @Page extends ko.Model
 
     # numericality:
     @numericality  'rating'
-    @numericality  'rating', {min: 1, max: 5}
+    @numericality  'rating', min: 1, max: 5
 
     # Inclusion/exclusion
     @inclusion   'subdomain', ["mine", "yours"]
     @exclusion   'subdomain', ["www", "www2"] 
 
     @format      'code', /\d+/ # Regex validation, blanks allowed
-    @length      'name', {min: 3, max: 10} # Stringish value should be with the range
+    @length      'name', min: 3, max: 10 # Stringish value should be with the range
 
     # Custom message
-    @presence    'name', {message: 'give me a name, yo!'}
+    @presence    'name', message: 'give me a name, yo!'
 
-    # Conditional validation - use the `page` model passed in as argument
+    # Conditional validation - access model using `this`
     @presence    'name', if: -> @persisted()
 
     # Custom inline validation
