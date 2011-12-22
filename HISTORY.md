@@ -1,8 +1,14 @@
 # x.y.z - in progress
 
 - Support collections (fetch multiple records)
-- Client side validation
 - JST templating support
+
+
+# 1.0.0 - 22 December 2011
+
+- Breaking change: `@configure` should be `@persistAt`
+- Custom model events and callbacks
+- Declarative client side validation
 
 # 0.0.4-5 - 20 December 2011
 
