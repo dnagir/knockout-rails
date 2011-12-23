@@ -20,6 +20,9 @@ describe "Validations", ->
   beforeEach ->
     @subject = new Page()
 
+  it "should initially be invalid", ->
+    expect(@subject.errors.name()).toBeTruthy()
+
   it "should set error on a field", ->
     @subject.name ''
     expect(@subject.errors.name()).toMatch /blank/i
@@ -39,6 +42,27 @@ describe "Validations", ->
   it "should join all the errors", ->
     @subject.multiple ''
     expect(@subject.errors.multiple()).toBe "xxx, xxx, xxx"
+
+
+  describe "when re-setting JSON", ->
+
+    it "should use existing observer", ->
+      prevName = @subject.name
+      @subject.set name: 'abcdef'
+      expect(@subject.name).toBe prevName
+
+    it "should change the values", ->
+      @subject.set name: 'abcdef'
+      expect(@subject.name()).toBe 'abcdef'
+
+    it "should make field valid", ->
+      @subject.set name:'a'
+      expect( @subject.errors.name() ).toBeFalsy()
+
+    it "should make field invalid", ->
+      @subject.name 'valid'
+      @subject.set name:''
+      expect( @subject.errors.name() ).toBeTruthy()
 
 
 

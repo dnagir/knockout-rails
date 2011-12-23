@@ -42,6 +42,9 @@ class ValidationContext
         me.subject.errors[field](null)
       , me.subject, "beforeChange" if me._validations[field].isEmpty()
 
+    # Enforce validation right after enabling it
+    validatorSubscriber.notifySubscribers( validatorSubscriber(), 'change')
+
     me._validations[field].push validatorSubscriber
     me
 
