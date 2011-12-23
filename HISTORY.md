@@ -3,6 +3,10 @@
 - Support collections (fetch multiple records)
 - JST templating support
 
+# 1.0.1 - 23 December 2011
+
+- Fix: ensure the validations are executed initially
+
 
 # 1.0.0 - 22 December 2011
 
