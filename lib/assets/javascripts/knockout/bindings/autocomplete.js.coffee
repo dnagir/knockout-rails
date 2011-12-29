@@ -39,7 +39,13 @@ ko.bindingHandlers.autocomplete =
 
     options.source = (request, response) ->
       src = ko.utils.unwrapObservable binding.source
-      response filter(src, request.term, binding.label)
+      if src['fail']? and src['done']? and src['always']
+        # Looks like it's a jQuery.Deferred
+        src.done (data) -> response filter(data, request.term, binding.label)
+        src.fail -> response []
+      else
+        response filter(src, request.term, binding.label)
+
 
     options.minLength = 2 unless options.minLength?
 

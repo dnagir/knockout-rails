@@ -41,6 +41,13 @@ describe "autocomplete", ->
     search '1'
     expect( itemsText() ).toBe '11'
 
+  it "should show labels for observable returning jQuery deferred", ->
+    prepare d = jQuery.Deferred()
+    search '1'
+    d.resolve ['11', '22']
+    expect( itemsText() ).toBe '11'
+
+
   it "should show names for observable objects", ->
     prepare [
       {name: ko.observable('11'), id: 1}
@@ -55,9 +62,3 @@ describe "autocomplete", ->
     search '2'
     select '22'
     expect( data.current() ).toBe obj
-
-
-  describe "setting selected element", ->
-    it "with array", -> expect('todo').toBe 'done'
-    it "with observable array", -> expect('todo').toBe 'done'
-    it "with jQuery AJAX object", -> expect('todo').toBe 'done'
