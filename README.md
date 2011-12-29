@@ -209,6 +209,8 @@ The list of currently available bindings:
 - `color` - converts an element into a color picker. Apply it to a `div` element: `color: page.fontColor`. Depends on [pakunok](https://github.com/dnagir/pakunok) gem (specifically - its `colorpicker` asset).
 - `onoff` - Converts checkboxes into iOS on/off buttons. Example: `onoff: page.isPublic`. It depends on [ios-chechboxes](https://github.com/dnagir/ios-checkboxes) gem.
 - `animate` - runs the animation when dependent attributes change. Example: `animate: {width: quotaUsed, height: quotaUsed(), duration: 2000}`.
+- `autocomplete` - supports jQuery UI autocomplete. Example: `autocomplete: {source: arrayOrObservableOrAnyObjectOrDeferred, select: observableToSetTheValueTo, label: 'nameOfTheFieldToDisplay'}`. The `source` can support `jQuery.Deferred` meaning that you can simply return the result of a `jQuery.ajax`.
+
 
 Please see the specs for more detailed instruction on how to use the specific binding.
 
