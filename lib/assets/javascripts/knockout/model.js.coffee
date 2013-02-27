@@ -85,7 +85,7 @@ Ajax =
           422: (xhr, status, errorThrown)->
             errorData = JSON.parse xhr.responseText
             console?.debug?("Validation error: ", errorData)
-            @updateErrors(errorData)
+            @updateErrors(errorData.errors)
 
       $.ajax(params)
         #.fail (xhr, status, errorThrown)-> console.error "fail: ", this
