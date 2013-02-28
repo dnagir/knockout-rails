@@ -25,7 +25,7 @@ Events =
       @events ||= {}
       @include Events.InstanceMethods
     upon: (eventName, callback) ->
-      @events[eventName] || = []
+      @events[eventName] ||= []
       @events[eventName].push callback
       this # Just to chain it if we need to
 
@@ -120,17 +120,21 @@ class Model extends Module
     @persisted = ko.dependentObservable -> !!me.id()
 
   set: (json) ->
-    ko.mapping.fromJS json, @mapping(), @
     me = this
+    ko.mapping.fromJS json, @mapping(), @
     @errors ||= {}
     ignores = @mapping().ignore
     availableFields = @constructor.fieldNames
     availableFields ||= @constructor.fields Object.keys(json) # Configure fields unless done manually
 
-    #for key, value of json
+     # key is local
     for key in availableFields when ignores.indexOf(key) < 0
       @[key] ||= ko.observable()
       @errors[key] ||= ko.observable()
+      do(key) ->
+        me[key].subscribe ->
+          # clean field errors
+          me.errors[key](undefined)
     @enableValidations()
     @
 
