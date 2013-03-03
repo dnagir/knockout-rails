@@ -53,7 +53,7 @@ Ajax =
 
 
   InstanceMethods:
-    ignore:  -> []
+    ignore:  -> ['errors']
     mapping: ->
       return @__ko_mapping__ if @__ko_mapping__
       mappable =
@@ -135,6 +135,11 @@ class Model extends Module
         me[key].subscribe ->
           # clean field errors
           me.errors[key](undefined)
+
+    # initialize server-side given errors
+    if json.errors
+      @updateErrors json.errors
+
     @enableValidations()
     @
 
