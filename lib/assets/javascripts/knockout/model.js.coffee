@@ -31,15 +31,29 @@ Events =
 
   InstanceMethods:
     trigger: (eventName, args...) ->
-      events = @constructor.events
-      handlers = events[eventName] || []
-      callback.apply(this, args) for callback in handlers
+      cevents = @constructor.events
+      chandlers = cevents[eventName] || []
+      callback.apply(this, args) for callback in chandlers
+
+      ievents = @events || {}
+      ihandlers = ievents[eventName] || []
+      callback.apply(this, args) for callback in ihandlers
+
       this # so that we can chain
+
+    upon: (eventName, callback) ->
+      @events ||= {}
+      @events[eventName] ||= []
+      @events[eventName].push callback
+      this # Just to chain it if we need to
 
 
 Callbacks =
   ClassMethods:
     beforeSave: (callback) -> @upon('beforeSave', callback)
+    saveSuccess: (callback) -> @upon('saveSuccess', callback)
+    saveValidationError: (callback) -> @upon('saveValidationError', callback) # server validation errors
+    saveProcessingError: (callback) -> @upon('saveProcessingError', callback)
 
 Ajax =
   ClassMethods:
@@ -53,7 +67,7 @@ Ajax =
 
 
   InstanceMethods:
-    ignore:  -> ['errors']
+    ignore:  -> ['errors', 'events']
     mapping: ->
       return @__ko_mapping__ if @__ko_mapping__
       mappable =
@@ -88,8 +102,14 @@ Ajax =
             @updateErrors(errorData.errors)
 
       $.ajax(params)
-        #.fail (xhr, status, errorThrown)-> console.error "fail: ", this
-        .done (resp, status, xhr)-> @updateErrors {}
+        .fail (xhr, status, errorThrown)->
+          @trigger('saveValidationError', xhr, status, errorThrown) if xhr.status == 422
+          @trigger('saveProcessingError', xhr, status, errorThrown) if xhr.status != 422
+
+        .done (resp, status, xhr)->
+          @updateErrors {}
+          @trigger('saveSuccess', resp)
+
         #.always (xhr, status) -> console.info "always: ", this
 
 
