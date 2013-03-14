@@ -65,11 +65,12 @@ Ajax =
         collectionUrl
     extended: -> @include Ajax.InstanceMethods
 
-
   InstanceMethods:
-    ignore:  -> ['errors', 'events']
+    ignore:  -> ['errors', 'events', 'persisted']
     mapping: ->
-      return @__ko_mapping__ if @__ko_mapping__
+      # return @__ko_mapping__ if @__ko_mapping__ # removed, because it didn't allowed adding new fields on object
+      # TODO should be three options: 1) send original fields (given on initialization), 2) send fields (declared with @field), or 3) send all observables
+      # original implementation was behaving as (1), now it behaves as (3), altough (2) could be quite helpful to choose a static set
       mappable =
         ignore: @ignore()
       for k, v of this
@@ -124,10 +125,12 @@ class Model extends Module
     fieldNames = fieldNames.flatten() # when a single arg is given as an array
     @fieldNames = fieldNames
 
-  constructor: (json) ->
+  constructor: (json, validate = true) ->
     me = this
-    @set json
+
+    @set json, validate
     @id ||= ko.observable()
+
     # Overly Heavy, heavy binding to `this`...
     @mapping().ignore.exclude('constructor').filter (v)->
         not v.startsWith('_') and Object.isFunction me[v]
@@ -139,7 +142,7 @@ class Model extends Module
 
     @persisted = ko.dependentObservable -> !!me.id()
 
-  set: (json) ->
+  set: (json = {}, validate = true) ->
     me = this
     ko.mapping.fromJS json, @mapping(), @
     @errors ||= {}
@@ -160,7 +163,7 @@ class Model extends Module
     if json.errors
       @updateErrors json.errors
 
-    @enableValidations()
+    @enableValidations(validate)
     @
 
   updateErrors: (errorData) ->

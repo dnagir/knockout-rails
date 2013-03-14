@@ -43,7 +43,8 @@ class ValidationContext
       , me.subject, "beforeChange" if me._validations[field].isEmpty()
 
     # Enforce validation right after enabling it
-    validatorSubscriber.notifySubscribers( validatorSubscriber(), 'change')
+    if not @subject.constructor._skipValidationOnInitialization
+      validatorSubscriber.notifySubscribers( validatorSubscriber(), 'change')
 
     me._validations[field].push validatorSubscriber
     me
@@ -52,6 +53,9 @@ class ValidationContext
 Validations =
   ClassMethods:
     extended: -> @include Validations.InstanceMethods
+
+    skipValidationOnInitialization: (enabled) ->
+      @_skipValidationOnInitialization = enabled
 
   InstanceMethods:
     isValid: ->
