@@ -104,12 +104,15 @@ Ajax =
 
       $.ajax(params)
         .fail (xhr, status, errorThrown)->
-          @trigger('saveValidationError', xhr, status, errorThrown) if xhr.status == 422
-          @trigger('saveProcessingError', xhr, status, errorThrown) if xhr.status != 422
+          @trigger('saveValidationError', errorThrown, xhr, status) if xhr.status == 422
+          @trigger('saveProcessingError', errorThrown, xhr, status) if xhr.status != 422
 
         .done (resp, status, xhr)->
+          if xhr.status == 201 # Created
+            @set resp
+
           @updateErrors {}
-          @trigger('saveSuccess', resp)
+          @trigger('saveSuccess', resp, xhr, status)
 
         #.always (xhr, status) -> console.info "always: ", this
 
