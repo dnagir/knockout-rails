@@ -55,6 +55,11 @@ Callbacks =
     saveValidationError: (callback) -> @upon('saveValidationError', callback) # server validation errors
     saveProcessingError: (callback) -> @upon('saveProcessingError', callback)
 
+    beforeDelete: (callback) -> @upon('beforeDelete', callback)
+    deleteError: (callback) -> @upon('deleteError', callback)
+    deleteSuccess: (callback) -> @upon('deleteSuccess', callback)
+
+
 Ajax =
   ClassMethods:
     persistAt: (@className) ->
@@ -79,12 +84,45 @@ Ajax =
 
     toJSON: -> ko.mapping.toJS @, @mapping()
 
+    delete: ->
+      return false unless @persisted()
+      @trigger('beforeDelete') # TODO
+
+      data = {id: @id}
+
+      params =
+        type: 'DELETE'
+        dataType: 'json'
+        beforeSend: (xhr)->
+          token = $('meta[name="csrf-token"]').attr('content')
+          xhr.setRequestHeader('X-CSRF-Token', token) if token
+        url: @constructor.getUrl(@)
+        contentType: 'application/json'
+        context: this
+        processData: false # jQuery tries to serialize to much, including constructor data
+        data: JSON.stringify data
+        statusCode:
+          422: (xhr, status, errorThrown)->
+            errorData = JSON.parse xhr.responseText
+            console?.debug?("Validation error: ", errorData)
+            @updateErrors(errorData.errors)
+
+      $.ajax(params)
+        .fail (xhr, status, errorThrown)->
+          @trigger('deleteError', errorThrown, xhr, status) if xhr.status == 422
+          @trigger('deleteError', errorThrown, xhr, status) if xhr.status != 422
+
+        .done (resp, status, xhr)->
+          @id(null)
+          @trigger('deleteSuccess', resp, xhr, status)
+
     save: ->
-      allowSaving = @isValid()
-      return false unless allowSaving
+      return false unless @isValid()
       @trigger('beforeSave') # Consider moving it into the beforeSend or similar
+
       data = {}
       data[@constructor.className] =@toJSON()
+
       params =
         type: if @persisted() then 'PUT' else 'POST'
         dataType: 'json'
