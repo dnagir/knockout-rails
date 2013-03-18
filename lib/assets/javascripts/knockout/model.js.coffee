@@ -117,7 +117,9 @@ Ajax =
           @trigger('deleteSuccess', resp, xhr, status)
 
     save: ->
+      @validateAllFields()
       return false unless @isValid()
+
       @trigger('beforeSave') # Consider moving it into the beforeSend or similar
 
       data = {}
@@ -166,10 +168,10 @@ class Model extends Module
     fieldNames = fieldNames.flatten() # when a single arg is given as an array
     @fieldNames = fieldNames
 
-  constructor: (json, validate = true) ->
+  constructor: (json) ->
     me = this
 
-    @set json, validate
+    @set json
     @id ||= ko.observable()
 
     # Overly Heavy, heavy binding to `this`...
@@ -183,7 +185,7 @@ class Model extends Module
 
     @persisted = ko.dependentObservable -> !!me.id()
 
-  set: (json = {}, validate = true) ->
+  set: (json = {}) ->
     me = this
     ko.mapping.fromJS json, @mapping(), @
     @errors ||= {}
@@ -195,16 +197,12 @@ class Model extends Module
     for key in availableFields when ignores.indexOf(key) < 0
       @[key] ||= ko.observable()
       @errors[key] ||= ko.observable()
-      do(key) ->
-        me[key].subscribe ->
-          # clean field errors
-          me.errors[key](undefined)
 
     # initialize server-side given errors
     if json.errors
       @updateErrors json.errors
 
-    @enableValidations(validate)
+    @enableValidations()
     @
 
   updateErrors: (errorData) ->

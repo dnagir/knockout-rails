@@ -52,10 +52,9 @@ class ValidationContext
 
 Validations =
   ClassMethods:
-    extended: -> @include Validations.InstanceMethods
-
     skipValidationOnInitialization: (enabled) ->
       @_skipValidationOnInitialization = enabled
+    extended: -> @include Validations.InstanceMethods
 
   InstanceMethods:
     isValid: ->
@@ -70,5 +69,16 @@ Validations =
       dsl = @validationContext.getDsl()
       @constructor.validates.call(dsl, this)
       true
+
+    validateAllFields: ->
+      for field, validators of @validationContext._validations
+        for validator in validators
+          # clear all validation errors
+          @errors[field](null)
+
+          # run validators
+          validator.notifySubscribers(validator(), 'change')
+      true
+
 
 ko.Validations = Validations
