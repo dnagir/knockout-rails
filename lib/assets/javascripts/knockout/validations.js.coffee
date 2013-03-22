@@ -71,13 +71,12 @@ Validations =
       true
 
     validateAllFields: ->
-      for field, validators of @validationContext._validations
-        for validator in validators
-          # clear all validation errors
-          @errors[field](null)
+      for field, validatorSubscribers of @validationContext._validations
+        # clear all validation errors
+        @errors[field](null)
 
-          # run validators
-          validator.notifySubscribers(validator(), 'change')
+        for validatorSubscriber in validatorSubscribers
+          validatorSubscriber.notifySubscribers(validatorSubscriber(), 'change') # run validators
       true
 
 

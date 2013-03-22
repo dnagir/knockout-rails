@@ -2,28 +2,30 @@
 
 ko.Validations.validators =
   acceptance: (model, field, options) ->
+    # TODO this should add virtual attribute to fields
     val = model[field]()
-    unless val then options.message || "needs to be accepted" else null
+
+    return null if not val and options.allow_nil in [true, undefined] # allow_nil defaults to true
+
+    accepted = if options.accept then val == options.accept else val
+    unless accepted then options.message || "must be accepted" else null
 
   presence: (model, field, options) ->
     val = model[field]()
     isBlank = !val or val.toString().isBlank()
     if isBlank then options.message || "can't be blank" else null
 
-
   email: (model, field, options) ->
     val = model[field]()
     isValid = !val or val.toString().match /.+@.+\..+/
     unless isValid then options.message or "should be a valid email" else null
 
-
   confirmation: (model, field, options) ->
-    otherField = options.confirms
-    throw "Please specify which field to apply the confirmation to using {confirms: 'otherField'}" unless otherField
+    # TODO should add virtual attribute to fields
+    confirmationField = options.confirmedBy || field + '_confirmation'
     orig = model[field]()
-    other = model[otherField]()
-    if orig != other and orig then options.message or "should confirm #{otherField}" else null
-
+    confirmation = model[confirmationField]()
+    if confirmation and orig != confirmation then options.message or "doesn’t match confirmation" else null
 
   numericality: (model, field, options) ->
     val = model[field]()
@@ -59,23 +61,22 @@ ko.Validations.validators =
 
   length: (model, field, options) ->
     val = model[field]()
-    return unless val
-    val = val.toString().length
-    {min, max} = options
-    min = val unless min?
-    max = val unless max?
-    createMsg = ->
-      minMsg = if options.min?
-        "at least #{min} characters long"
-      else
-        ""
-      maxMsg = if options.max?
-        "no longer than #{max} characters"
-      else
-        ""
-      separator = if minMsg and maxMsg then " but " else ""
-      "should be #{minMsg}#{separator}#{maxMsg}"
-    if min <= val <= max then null else options.message or createMsg()
+    val = if val then  val.toString().length else 0
+
+    {minimum, maximum} = options
+    format = (msg, count, value) ->
+      msg.replace(/%{count}/g, count).replace(/%{value}/g, value)
+
+    # minimum == maximum
+    if (exact = minimum) and minimum == maximum and val != exact
+      return format(options.wrong_length || options.message || "should be exactly #{exact} charaters long", exact, val)
+
+    if minimum and val < minimum
+      return format(options.too_short || options.message || "should be at least #{minimum} characters long", minimum, val)
+    if maximum and val > maximum
+      return format(options.too_long || options.message || "should be no longer than #{maximum} characters", maximum, val)
+
+    return null
 
   custom: (model, field, options) ->
     # Treat options as a mandatory callback
