@@ -11,6 +11,7 @@ ko.Validations.validators =
     unless accepted then options.message || "must be accepted" else null
 
   presence: (model, field, options) ->
+    # TODO i18n zobaczyć w railsach jaki walidator jakie pola obsługuje
     val = model[field]()
     isBlank = !val or val.toString().isBlank()
     if isBlank then options.message || "can't be blank" else null
@@ -36,21 +37,24 @@ ko.Validations.validators =
     max = if options.max? then options.max else num
     if looksLikeNumeric and min <= num <= max then null else options.message or "should be numeric"
 
-
   inclusion: (model, field, options) ->
-    values = options.values
-    throw "Please specify the values {values: [1, 2, 5]}" unless values
-    val = model[field]()
-    return unless val
-    if values.indexOf(val) < 0 then options.message or "should be one of #{values.join(', ')}" else null
+    values = options['in'] || options.within
+    throw "Please specify the values {in: [1, 2, 5]}" unless values
+    format = (msg, value) ->
+      msg.replace(/%{value}/g, value)
 
+    val = model[field]()
+    return null if not val and options.allow_nil
+    if values.indexOf(val) < 0 then format(options.message || "is not included in the list", val) else null
 
   exclusion: (model, field, options) ->
-    values = options.values
-    throw "Please specify the values {values: [1, 2, 5]}" unless values
+    values = options['in'] || options.within
+    throw "Please specify the values {in: [1, 2, 5]}" unless values
+    format = (msg, value) ->
+      msg.replace(/%{value}/g, value)
+
     val = model[field]()
-    return unless val
-    if values.indexOf(val) >= 0 then options.message or "should not be any of #{values.join(', ')}" else null
+    if values.indexOf(val) >= 0 then format(options.message || "is reserved", val) else null
 
   format: (model, field, options) ->
     matcher = options.match
