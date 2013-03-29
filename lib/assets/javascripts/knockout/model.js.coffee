@@ -184,6 +184,7 @@ class Model extends Module
         me._originals[fn] = original
 
     @persisted = ko.dependentObservable -> !!me.id()
+    @enableValidations()
 
   set: (json = {}) ->
     me = this
@@ -202,7 +203,6 @@ class Model extends Module
     if json.errors
       @updateErrors json.errors
 
-    @enableValidations()
     @
 
   updateErrors: (errorData) ->

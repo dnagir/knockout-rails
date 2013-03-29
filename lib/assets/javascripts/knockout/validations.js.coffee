@@ -24,11 +24,12 @@ class ValidationContext
     me._validations[field] ||= []
 
     validatorSubscriber = ko.dependentObservable ->
-      {only, except} = options
+      {only, except, validate_on} = options
       allowedByOnly = !only or only.call(me.subject)
       deniedByExcept = except and except.call(me.subject)
+      deniedByStage = (validate_on == 'create' and me.subject.persisted()) or (validate_on == 'update' and not me.subject.persisted())
 
-      shouldValidate = allowedByOnly and not deniedByExcept
+      shouldValidate = allowedByOnly and not deniedByExcept and not deniedByStage
 
       validator.call(me, me.subject, field, options) if shouldValidate
 
