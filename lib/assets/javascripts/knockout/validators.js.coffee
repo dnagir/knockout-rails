@@ -29,13 +29,31 @@ ko.Validations.validators =
     if confirmation and orig != confirmation then options.message or "doesn’t match confirmation" else null
 
   numericality: (model, field, options) ->
+    # Rails is missing functionality for NumericalityValidator: cannot specify custom messages for different conditions like in length
+    # Here you can specify them in options.messages.<custom_key>, ie. options.messages.greater_than
+
     val = model[field]()
-    return unless val
-    looksLikeNumeric = val.toString().match /^-?\d+$/ # We should do better than this
-    num = parseInt val, 10
-    min = if options.min? then options.min else num
-    max = if options.max? then options.max else num
-    if looksLikeNumeric and min <= num <= max then null else options.message or "should be numeric"
+    return if options.allow_nil and not val # allow_nil defaults to false
+
+    numericParts = val.toString().match /^([+-]?\d+)(\.\d+)?$/ if val # TODO trim?
+    return options.message || options.messages.not_a_number || "is not a number" unless numericParts
+
+    isFloat = numericParts[2] != undefined
+    value = parseFloat(val)
+    format = (msg, value, count = null) ->
+      msg.replace(/%{count}/g, count).replace(/%{value}/g, value)
+
+    # Rails prefer default message rather than custom keys which I find quite unintuitive, but.. let's stick to it
+    return format(options.message || options.messages.not_an_integer || "must be an integer", val) if (options.only_integer or options.odd or options.even) and isFloat
+    return format(options.message || options.messages.odd || "must be odd", val) if options.odd and value % 2 == 0
+    return format(options.message || options.messages.even || "must be even", val) if options.even and value % 2 == 1
+    return format(options.message || options.messages.greater_than || "must be greater than %{count}", val, options.greater_than) if options.greater_than and value <= options.greater_than
+    return format(options.message || options.messages.less_than || "must be less than %{count}", val, options.less_than) if options.less_than and value >= options.less_than
+    return format(options.message || options.messages.greater_than_or_equal_to || "must be greater than or equal to %{count}", val, options.greater_than_or_equal_to) if options.greater_than_or_equal_to and value < options.greater_than_or_equal_to
+    return format(options.message || options.messages.less_than_or_equal_to || "must be less than or equal to %{count}", val, options.less_than_or_equal_to) if options.less_than_or_equal_to and value > options.less_than_or_equal_to
+    return format(options.message || options.messages.equal_to || "must be equal to %{count}", val, options.equal_to) if options.equal_to and value != options.equal_to
+
+    return null # Ca va!
 
   inclusion: (model, field, options) ->
     values = options['in'] || options.within
@@ -44,7 +62,7 @@ ko.Validations.validators =
       msg.replace(/%{value}/g, value)
 
     val = model[field]()
-    return null if not val and options.allow_nil
+    return if not val and options.allow_nil
     if values.indexOf(val) < 0 then format(options.message || "is not included in the list", val) else null
 
   exclusion: (model, field, options) ->
@@ -56,6 +74,7 @@ ko.Validations.validators =
     val = model[field]()
     if values.indexOf(val) >= 0 then format(options.message || "is reserved", val) else null
 
+  # TODO format
   format: (model, field, options) ->
     matcher = options.match
     throw "Please specify the match RegEx {match: /\d+/}" unless matcher
