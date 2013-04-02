@@ -2,7 +2,6 @@
 
 ko.Validations.validators =
   acceptance: (model, field, options) ->
-    # TODO this should add virtual attribute to fields
     val = model[field]()
 
     return null if not val and options.allow_nil in [true, undefined] # allow_nil defaults to true
@@ -11,18 +10,11 @@ ko.Validations.validators =
     unless accepted then options.message || "must be accepted" else null
 
   presence: (model, field, options) ->
-    # TODO i18n zobaczyć w railsach jaki walidator jakie pola obsługuje
     val = model[field]()
     isBlank = !val or val.toString().isBlank()
     if isBlank then options.message || "can't be blank" else null
 
-  email: (model, field, options) ->
-    val = model[field]()
-    isValid = !val or val.toString().match /.+@.+\..+/
-    unless isValid then options.message or "should be a valid email" else null
-
   confirmation: (model, field, options) ->
-    # TODO should add virtual attribute to fields
     confirmationField = options.confirmedBy || field + '_confirmation'
     orig = model[field]()
     confirmation = model[confirmationField]()
@@ -35,7 +27,7 @@ ko.Validations.validators =
     val = model[field]()
     return if options.allow_nil and not val # allow_nil defaults to false
 
-    numericParts = val.toString().match /^([+-]?\d+)(\.\d+)?$/ if val # TODO trim?
+    numericParts = val.toString().trim().match /^([+-]?\d+)(\.\d+)?$/ if val
     return options.message || options.messages.not_a_number || "is not a number" unless numericParts
 
     isFloat = numericParts[2] != undefined
@@ -43,15 +35,17 @@ ko.Validations.validators =
     format = (msg, value, count = null) ->
       msg.replace(/%{count}/g, count).replace(/%{value}/g, value)
 
+    custom_message = options.messages || {}
+
     # Rails prefer default message rather than custom keys which I find quite unintuitive, but.. let's stick to it
-    return format(options.message || options.messages.not_an_integer || "must be an integer", val) if (options.only_integer or options.odd or options.even) and isFloat
-    return format(options.message || options.messages.odd || "must be odd", val) if options.odd and value % 2 == 0
-    return format(options.message || options.messages.even || "must be even", val) if options.even and value % 2 == 1
-    return format(options.message || options.messages.greater_than || "must be greater than %{count}", val, options.greater_than) if options.greater_than and value <= options.greater_than
-    return format(options.message || options.messages.less_than || "must be less than %{count}", val, options.less_than) if options.less_than and value >= options.less_than
-    return format(options.message || options.messages.greater_than_or_equal_to || "must be greater than or equal to %{count}", val, options.greater_than_or_equal_to) if options.greater_than_or_equal_to and value < options.greater_than_or_equal_to
-    return format(options.message || options.messages.less_than_or_equal_to || "must be less than or equal to %{count}", val, options.less_than_or_equal_to) if options.less_than_or_equal_to and value > options.less_than_or_equal_to
-    return format(options.message || options.messages.equal_to || "must be equal to %{count}", val, options.equal_to) if options.equal_to and value != options.equal_to
+    return format(options.message || custom_message.not_an_integer || "must be an integer", val) if (options.only_integer or options.odd or options.even) and isFloat
+    return format(options.message || custom_message.odd || "must be odd", val) if options.odd and value % 2 == 0
+    return format(options.message || custom_message.even || "must be even", val) if options.even and value % 2 == 1
+    return format(options.message || custom_message.greater_than || "must be greater than %{count}", val, options.greater_than) if options.greater_than and value <= options.greater_than
+    return format(options.message || custom_message.less_than || "must be less than %{count}", val, options.less_than) if options.less_than and value >= options.less_than
+    return format(options.message || custom_message.greater_than_or_equal_to || "must be greater than or equal to %{count}", val, options.greater_than_or_equal_to) if options.greater_than_or_equal_to and value < options.greater_than_or_equal_to
+    return format(options.message || custom_message.less_than_or_equal_to || "must be less than or equal to %{count}", val, options.less_than_or_equal_to) if options.less_than_or_equal_to and value > options.less_than_or_equal_to
+    return format(options.message || custom_message.equal_to || "must be equal to %{count}", val, options.equal_to) if options.equal_to and value != options.equal_to
 
     return null # Ca va!
 
@@ -74,13 +68,18 @@ ko.Validations.validators =
     val = model[field]()
     if values.indexOf(val) >= 0 then format(options.message || "is reserved", val) else null
 
-  # TODO format
   format: (model, field, options) ->
-    matcher = options.match
-    throw "Please specify the match RegEx {match: /\d+/}" unless matcher
+    match = options.with
+    wont_match = options.without
+    throw "Please specify the with (or without) RegEx {'with': /\d+/}" unless match or wont_match
+
     val = model[field]()
-    return unless val
-    if val.toString().match matcher then null else options.message or "should be formatted properly"
+    valStr = if val then val.toString() else ''
+    return if not val and options.allow_nil
+
+    if (match and not valStr.match match) or (wont_match and valStr.match wont_match)
+      return options.message or "is invalid"
+    return null
 
   length: (model, field, options) ->
     val = model[field]()
@@ -90,14 +89,16 @@ ko.Validations.validators =
     format = (msg, count, value) ->
       msg.replace(/%{count}/g, count).replace(/%{value}/g, value)
 
+    custom_message = options.messages || {}
+
     # minimum == maximum
     if (exact = minimum) and minimum == maximum and val != exact
-      return format(options.wrong_length || options.message || "should be exactly #{exact} charaters long", exact, val)
+      return format(custom_message.wrong_length || options.message || "should be exactly #{exact} charaters long", exact, val)
 
     if minimum and val < minimum
-      return format(options.too_short || options.message || "should be at least #{minimum} characters long", minimum, val)
+      return format(custom_message.too_short || options.message || "should be at least #{minimum} characters long", minimum, val)
     if maximum and val > maximum
-      return format(options.too_long || options.message || "should be no longer than #{maximum} characters", maximum, val)
+      return format(custom_message.too_long || options.message || "should be no longer than #{maximum} characters", maximum, val)
 
     return null
 
