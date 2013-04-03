@@ -94,7 +94,7 @@ module KnockoutRails
             ko_options = ko_validator[:options]
             ko_options[:allow_nil] = true if options[:allow_blank] == true # allow_blank = allow_nil, maybe a bit risky
 
-            ko_options[:validate_on] = options[:on] if options[:on]
+            ko_options['on'] = options[:on] if options[:on]
 
             case validator.kind
               when :acceptance

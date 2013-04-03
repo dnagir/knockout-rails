@@ -241,7 +241,27 @@ Now let's see how we can show the validation errors on the page and bind everyth
         %span.inline-error{:data=>{:bind=>'visible: errors.name, text: errors.name'}}
 ```
 
+## Formtastic-knockout binding
+
+KrzysztofMadejski: For purpose of my own project I've extended Formtastic and FormtasticBoostrap so it generates data-bind tags.
+
+See this Gist: https://gist.github.com/KrzysztofMadejski/5301195
+
+Try it: `= semantic_form_for SeatReservation.new, knockout: true`. It will generate form with data-bind attributes.
+For errors to work you will need errors_bootstrap custom binding as well.
+
+*formtastic_knockout.rb* should be put in *config/initializers/*
+*custom.bindings.bootstrap.js* should be put in *app/assets/javascripts/knockout/*
+
+*knockout* can be specified on both `form_for` and specific `input` lines. It can take input in one of three formats:
+
+* true/false - enable/disable default bindings (you can set `knockout: true` on `semantic_form_for`, and then disable some of the inputs)
+* Hash - it is merged with defaults, ie. `knockout: {submit: '$root.save_form', css: '$root.form_class($index())' }`
+* String - overrides defaults, ie. `= f.input :name, knockout: 'css: compute_class'`
+
 ## Model Validations
+
+**Note**: Please look at *Changes* section above.
 
 If you are using the model, you can also take advantage of the client-side validation framework.
 
@@ -259,27 +279,29 @@ class @Page extends ko.Model
   @validates: ->
     @acceptance  'agree_to_terms' # Value is truthy
     @presence    'name', 'body' # Non-empty, non-blank stringish value
-    @email       'author' # Valid email, blanks allowed
 
     @presence      'password'
-    @confirmation  'passwordConfirmation', {confirms: 'password'} # Blanks allowed
+    @confirmation  'password' # Blanks allowed, need password_confirmation field
 
     # numericality:
     @numericality  'rating'
-    @numericality  'rating', min: 1, max: 5
+    @numericality  'rating', minimum: 1, maximum: 5
 
     # Inclusion/exclusion
-    @inclusion   'subdomain', values: ["mine", "yours"]
-    @exclusion   'subdomain', values: ["www", "www2"] 
+    @inclusion   'subdomain', 'in': ["mine", "yours"]
+    @exclusion   'subdomain', 'in': ["www", "www2"]
 
-    @format      'code', match: /\d+/ # Regex validation, blanks allowed
-    @length      'name', min: 3, max: 10 # Stringish value should be with the range
+    @format      'code', 'with': /\d+/ # Regex validation, blanks allowed
+    @length      'name', minimum: 3, maximum: 10 # Stringish value should be with the range
 
     # Custom message
     @presence    'name', message: 'give me a name, yo!'
 
     # Conditional validation - access model using `this`
     @presence    'name', only: -> @persisted(), except: -> @id() > 5
+
+    # Same as above
+    @presence    'name', 'on': 'update', except: -> @id() > 5
 
     # Custom inline validation
     @custom 'name', (page) ->
@@ -300,7 +322,7 @@ so that you can use it like so:
 
 ```coffee
 @validates: ->
-  funky 'name', word: 'yakk'
+  @funky 'name', word: 'yakk'
 ```
 
 Here's how you would check whether the model is valid or not (assuming presence validation on `name` field):
@@ -358,7 +380,7 @@ class @Page extends ko.Model
 class @Page extends ko.Model
   @persistAt 'page'
 
-  @on 'beforeSave', ->
+  @upon 'beforeSave', ->
     @age = @birthdate - new Date()
 ```
 
