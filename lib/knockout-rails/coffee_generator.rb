@@ -45,7 +45,7 @@ module KnockoutRails
           i[attr] = (validators.instance_of? Array) ? validators : [validators]
         end
 
-        # USAGE except: {attribute: []} # ignore all validators
+        # USAGE except: {attribute: []} # ignore all validators for attribute
         # USAGE except: {attribute: :validator_kind}
         # USAGE except: {attribute: [:kind1, :kind2]}
         except = (mapper_options[:except] || {}).each_with_object({}) do |(attr, validators), i|
@@ -116,7 +116,7 @@ module KnockoutRails
 
               when :format
                 if options[:with]
-                  ko_options[:with] = json_regexp(options[:with])
+                  ko_options['with'] = json_regexp(options[:with])
                 elsif options[:without]
                   ko_options[:without] = json_regexp(options[:without])
                 end

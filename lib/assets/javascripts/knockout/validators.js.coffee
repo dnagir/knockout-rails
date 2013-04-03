@@ -93,12 +93,12 @@ ko.Validations.validators =
 
     # minimum == maximum
     if (exact = minimum) and minimum == maximum and val != exact
-      return format(custom_message.wrong_length || options.message || "should be exactly #{exact} charaters long", exact, val)
+      return format(custom_message.wrong_length || options.message || "should be exactly %{count} charaters long", exact, val)
 
     if minimum and val < minimum
-      return format(custom_message.too_short || options.message || "should be at least #{minimum} characters long", minimum, val)
+      return format(custom_message.too_short || options.message || "should be at least %{count} characters long", minimum, val)
     if maximum and val > maximum
-      return format(custom_message.too_long || options.message || "should be no longer than #{maximum} characters", maximum, val)
+      return format(custom_message.too_long || options.message || "should be no longer than %{count} characters", maximum, val)
 
     return null
 
