@@ -8,7 +8,7 @@ This provides a set of conveniences for you to use more like Backbone or Spine, 
 
 This gem hasn't been developed since year or some so instead of filing issues I've extended it with what I thought was missing. This version is not fully compatible with original 1.0.1 (validations are rewritten and there were some small changes in model). I've bumped it to 2.0.0, altought i would say it's kind of 'development' version and 0.2.0 would be more appriopriate, especially that I'm not a Coffeescript and JS guru. I've done development in master branch, but if I further work on this I will stick to http://nvie.com/posts/a-successful-git-branching-model/.
 
-Ok, the changes goes below (my commits are also quite self-describing)
+Ok, the changes go below (my commits are also quite self-describing)
 
 ## Server-side errors handling
 

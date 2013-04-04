@@ -9,6 +9,13 @@ describe KnockoutRails do
   it { should serve 'knockout/sugar-1.1.1' }
 
   it { should serve 'knockout/model' }
-  it { should serve 'knockout/observables' }
-  it { should serve 'knockout/bindings' }
+  it { should serve 'knockout/validations' }
+  it { should serve 'knockout/validators' }
+  it { should serve 'knockout/bindings/all' }
+  it { should serve 'knockout/bindings/animate' }
+  it { should serve 'knockout/bindings/autocomplete' }
+  it { should serve 'knockout/bindings/autosave' }
+  it { should serve 'knockout/bindings/color' }
+  it { should serve 'knockout/bindings/inplace' }
+  it { should serve 'knockout/bindings/onoff' }
 end

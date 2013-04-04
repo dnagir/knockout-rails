@@ -46,7 +46,7 @@ class ValidationContext
 
     # Enforce validation right after enabling it (disabled by default)
     skipValidation = @subject.constructor._skipValidationOnInitialization
-    if skipValidation !== undefined and not skipValidation
+    if skipValidation != undefined and not skipValidation
       validatorSubscriber.notifySubscribers( validatorSubscriber(), 'change')
 
     me._validations[field].push validatorSubscriber
