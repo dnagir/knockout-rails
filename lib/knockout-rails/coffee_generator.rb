@@ -162,6 +162,11 @@ module KnockoutRails
               when :presence
                 ko_options[:message] = default_messages[:blank] unless ko_options[:message]
 
+              when :uniqueness
+                # uniqueness validator needs client-server communication, skip it for now
+                skipped_validators << ko_validator
+                next
+
               else
                 # Maybe custom EachValidator? Let it pass
             end
@@ -175,6 +180,11 @@ module KnockoutRails
           end
         end
 
+        return ko_validators, skipped_validators
+      end
+
+      def knockout_validations_coffee(mapper_options = {})
+        ko_validators, skipped_validators = knockout_validations mapper_options
 
         coffee_str = ''
         newline = mapper_options[:newline] ? "\n" : ''
