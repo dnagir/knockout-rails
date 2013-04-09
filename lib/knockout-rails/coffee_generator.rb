@@ -41,15 +41,17 @@ module KnockoutRails
         # USAGE only: {attribute: []} # include all
         # USAGE only: {attribute: :validator_kind}
         # USAGE only: {attribute: [:kind1, :kind2]}
-        only = (mapper_options[:only] || {}).each_with_object({}) do |(attr, validators), i|
-          i[attr] = (validators.instance_of? Array) ? validators : [validators]
+        only = (mapper_options[:only] || {}).each_with_object({}) do |(attr, validators), hsh|
+          validators = [validators] unless validators.instance_of? Array
+          hsh[attr.to_sym] = validators.map { |validator_name| validator_name.to_sym }
         end
 
         # USAGE except: {attribute: []} # ignore all validators for attribute
         # USAGE except: {attribute: :validator_kind}
         # USAGE except: {attribute: [:kind1, :kind2]}
-        except = (mapper_options[:except] || {}).each_with_object({}) do |(attr, validators), i|
-          i[attr] = (validators.instance_of? Array) ? validators : [validators]
+        except = (mapper_options[:except] || {}).each_with_object({}) do |(attr, validators), hsh|
+          validators = [validators] unless validators.instance_of? Array
+          hsh[attr.to_sym] = validators.map { |validator_name| validator_name.to_sym }
         end
 
         obj_stub = Object.new
