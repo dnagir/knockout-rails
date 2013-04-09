@@ -1,4 +1,4 @@
-#= require pakunok/jquery-ui/pack/autocomplete
+#= require jquery.ui.autocomplete
 
 $ = jQuery
 
