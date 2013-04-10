@@ -71,10 +71,12 @@ Ajax =
     extended: -> @include Ajax.InstanceMethods
 
   InstanceMethods:
+    # TODO Events should not be exposed like this
+    # TODO Persisted - czy obsługuje flagę destroyed?
     ignore:  -> ['errors', 'events', 'persisted']
     mapping: ->
       # return @__ko_mapping__ if @__ko_mapping__ # removed, because it didn't allowed adding new fields on object
-      # TODO should be three options: 1) send original fields (given on initialization), 2) send fields (declared with @field), or 3) send all observables
+      # TODO should be three options: 1) send original fields (given on initialization), 2) send fields (declared with @fields), or 3) send all observables
       # original implementation was behaving as (1), now it behaves as (3), altough (2) could be quite helpful to choose a static set
       mappable =
         ignore: @ignore()
