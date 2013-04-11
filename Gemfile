@@ -12,5 +12,5 @@ end
 gem 'jquery-rails' # For the dummy app
 
 # Bindings assets
-gem 'pakunok' # Provides some assets for the bindings
-gem 'ios-checkboxes'
+#gem 'pakunok' # Provides some assets for the bindings
+#gem 'ios-checkboxes'
