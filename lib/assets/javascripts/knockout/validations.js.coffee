@@ -61,6 +61,16 @@ Validations =
 
   InstanceMethods:
     isValid: ->
+      # run all validations
+      if @validationContext
+        for field, validatorSubscribers of @validationContext._validations
+          # clear all validation errors
+          @errors[field](null)
+
+          for validatorSubscriber in validatorSubscribers
+            validatorSubscriber.notifySubscribers(validatorSubscriber(), 'change') # run validators
+
+      # check errors
       return true unless @errors
       for key, value of @errors
         return false unless Object.isEmpty value()
@@ -72,15 +82,5 @@ Validations =
       dsl = @validationContext.getDsl()
       @constructor.validates.call(dsl, this)
       true
-
-    validateAllFields: ->
-      for field, validatorSubscribers of @validationContext._validations
-        # clear all validation errors
-        @errors[field](null)
-
-        for validatorSubscriber in validatorSubscribers
-          validatorSubscriber.notifySubscribers(validatorSubscriber(), 'change') # run validators
-      true
-
 
 ko.Validations = Validations

@@ -1,4 +1,4 @@
-describe "NestedModels", ->
+describe "Relations", ->
 
   class Paragraph extends ko.Model
     @persistAt 'paragraph'
@@ -9,7 +9,7 @@ describe "NestedModels", ->
 
     @fields 'name'
     # TODO add autosave
-    @has_one 'footer', Footer
+    @has_one 'footer', -> Footer # deferred reference to class symbol, because it's defined below Page
     @has_many 'paragraphs', Paragraph
 
   class Link extends ko.Model
@@ -78,7 +78,10 @@ describe "NestedModels", ->
                           footer: {
                             id: undefined
                             content: 'Footer text'
+                            links: []
                           }
+                          paragraphs: []
+
 
   it "should have sent nested models - belongs_to", ->
     @footer.page @page
@@ -92,7 +95,9 @@ describe "NestedModels", ->
                           page: {
                             id: undefined
                             name: 'Home'
+                            paragraphs: []
                           }
+                          links: []
 
   it "should have sent nested models - has_many", ->
     @page.paragraphs.push new Paragraph({content: 'Para 1'})

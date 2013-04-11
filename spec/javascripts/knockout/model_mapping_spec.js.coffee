@@ -1,11 +1,11 @@
 class Page extends ko.Model
   @persistAt 'page'
-  # no fields specified - pass all observables
+  # no fields specified - use set or setField to set data
   @
 
 class Pagee extends ko.Model
   @persistAt 'pagee'
-  # no fields specified - pass all observables
+  # no fields specified - use set or setField to set data
   @
 
 
@@ -39,9 +39,8 @@ describe "Mapping Model", ->
     @empty_todo = new Todo
 
   it "should create observable attributes for fields always", ->
-    #expect(@todo.what).toEqual jasmine.any(Function) # observable
     expect(@todo.what).toBeObservable()
-    expect(@empty_todo.what).toEqual jasmine.any(Function) # observable
+    expect(@empty_todo.what).toBeObservable()
 
     expect(@todo.what()).toBe 'Milk'
     expect(@empty_todo.what()).toBeUndefined()
@@ -58,7 +57,7 @@ describe "Mapping Model", ->
     expect(@empty_page.name).toBeUndefined() # name function not defined
     expect(@empty_pagee.name).toBeUndefined() # name function not defined
 
-    @empty_page.name = ko.observable('Login')
+    @empty_page.setField 'name', 'Login' # adding new field
     expect(@empty_page.name()).toBe 'Login'
     expect(@empty_page.toJSON()).toEqual {name: 'Login'} # and it serializes it right
 
