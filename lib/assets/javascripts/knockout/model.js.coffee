@@ -64,10 +64,11 @@ Callbacks =
 
 Ajax =
   ClassMethods:
-    persistAt: (@className) ->
+    persistAt: (controllerName = name.toLowerCase() + 's') ->
       @getUrl ||= (model) ->
         return model.getUrl(model) if model and model.getUrl
-        collectionUrl = "/#{className.toLowerCase()}s"
+
+        collectionUrl = "/#{controllerName}s"
         collectionUrl += "/#{model.id()}" if model?.id()
         collectionUrl
     extended: -> @include Ajax.InstanceMethods
@@ -115,7 +116,7 @@ Ajax =
       @trigger('beforeSave') # Consider moving it into the beforeSend or similar
 
       data = {}
-      data[@constructor.className] =@toJSON()
+      data[@constructor.name.toLowerCase()] =@toJSON()
 
       params =
         type: if @persisted() then 'PUT' else 'POST'
@@ -266,7 +267,7 @@ class Model extends Module
     for fld, setter of this
       if ko.isObservableArray setter
         setter([])
-        @errors[fld](undefined)
+        @errors[fld](undefined) # TODO create of undefined?
       else if ko.isObservable setter
         setter(undefined)
         @errors[fld](undefined)
