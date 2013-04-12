@@ -1,8 +1,8 @@
 #=require knockout
 #=require_tree ./support
-#=require knockout/model_mapping_spec
-#=require knockout/model_relations_spec
-# require_tree ./
+# require knockout/model_mapping_spec
+# require knockout/model_relations_spec
+#=require_tree ./
 
 beforeEach ->
   clearAjaxRequests()

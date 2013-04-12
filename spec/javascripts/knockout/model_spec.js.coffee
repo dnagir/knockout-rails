@@ -1,11 +1,12 @@
 class Page extends ko.Model
-  @persistAt 'page'
   @upon 'sayHi', (hi) ->
     @sayHi = hi
  
   @beforeSave ->
     @beforeSaved = true
 
+class Company extends ko.Model
+  @persistAt 'admin/companies' # custom plural form and namespaces
 
 describe "Model", ->
 
@@ -28,6 +29,9 @@ describe "Model", ->
     expect(@page.persisted()).toBeTruthy()
     @page.id(null)
     expect(@page.persisted()).toBeFalsy()
+    @page.id(111)
+    @page._destroy = true
+    expect(@page.persisted()).toBeFalsy()
 
   describe "Ajax", ->
     it "should return jQuery deferred when saving", ->
@@ -49,6 +53,18 @@ describe "Model", ->
       @page.save()
       method = mostRecentAjaxRequest().method
       expect(method).toBe "POST"
+
+    # TODO Delete
+
+    it "should persist at model name if url not given", ->
+      @page.id(111)
+      @page.save()
+      expect(mostRecentAjaxRequest().url).toBe "/pages/111"
+
+    it "should persist at given url", ->
+      company = new Company({id: 111})
+      company.save()
+      expect(mostRecentAjaxRequest().url).toBe "/admin/companies/111"
 
     it "should include the JSON data", ->
       @page.save()
@@ -107,3 +123,6 @@ describe "Model", ->
     it "beforeSave should be called ", ->
       @page.save()
       expect(@page.beforeSaved).toBeTruthy()
+
+    #TODO instance callback, jasmine spies
+

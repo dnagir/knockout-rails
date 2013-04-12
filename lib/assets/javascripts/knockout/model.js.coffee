@@ -64,13 +64,15 @@ Callbacks =
 
 Ajax =
   ClassMethods:
-    persistAt: (controllerName = name.toLowerCase() + 's') ->
-      @getUrl ||= (model) ->
-        return model.getUrl(model) if model and model.getUrl
+    persistAt: (@controllerName) -> undefined
 
-        collectionUrl = "/#{controllerName}s"
+    getUrl: (model) ->
+        @controllerName ||= @name.toLowerCase() + 's'
+
+        collectionUrl = "/#{@controllerName}"
         collectionUrl += "/#{model.id()}" if model?.id()
         collectionUrl
+
     extended: -> @include Ajax.InstanceMethods
 
   InstanceMethods:
@@ -238,7 +240,7 @@ class Model extends Module
         me._originals[fn] = original
 
     # TODO test if persisted is working on destroyed
-    @persisted = ko.dependentObservable -> !!me.id()
+    @persisted = ko.dependentObservable -> !!me.id() and not me._destroy
     @enableValidations()
 
   setField: (fld, value) ->
