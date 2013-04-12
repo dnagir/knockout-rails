@@ -74,7 +74,7 @@ Ajax =
         collectionUrl
 
     # TODO prefix events
-    @__ignored: -> ['errors', 'events', 'persisted']
+    __ignored: -> ['errors', 'events', 'persisted']
 
     extended: -> @include Ajax.InstanceMethods
 
@@ -224,16 +224,13 @@ class Model extends Module
     @fieldNames = fieldNames.flatten() # when a single arg is given as an array
     @fieldsSpecified = true
 
-  # TODO Events should not be exposed like this
-  # TODO Persisted - czy obsługuje flagę destroyed?
-  __ignore:  -> ['errors', 'events', 'persisted']
-
   # creates mapping and fields
   __initialize: ->
     @errors ||= {}
 
+    # TODO delete mapping
     mapping =
-      ignore: @__ignore()
+      ignore: @constructor.__ignored()
       include: []
       copy: []
       observe: []
@@ -307,7 +304,7 @@ class Model extends Module
       if ko.isObservableArray setter
         setter([])
         @errors[fld](undefined) # TODO create of undefined?
-      else if ko.isObservable setter and @constructor.__ignored().indexOf(fld) == -1
+      else if ko.isObservable(setter) and @constructor.__ignored().indexOf(fld) == -1
         setter(undefined)
         @errors[fld](undefined)
 
