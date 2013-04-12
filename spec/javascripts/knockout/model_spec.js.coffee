@@ -5,6 +5,8 @@ class Page extends ko.Model
   @beforeSave ->
     @beforeSaved = true
 
+class CompanyEmployeePage extends ko.Model
+
 class Company extends ko.Model
   @persistAt 'admin/companies' # custom plural form and namespaces
 
@@ -60,6 +62,10 @@ describe "Model", ->
       @page.id(111)
       @page.save()
       expect(mostRecentAjaxRequest().url).toBe "/pages/111"
+
+      cep = new CompanyEmployeePage({id: 111})
+      cep.save()
+      expect(mostRecentAjaxRequest().url).toBe "/company_employee_pages/111"
 
     it "should persist at given url", ->
       company = new Company({id: 111})

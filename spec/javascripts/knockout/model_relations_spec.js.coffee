@@ -73,14 +73,13 @@ describe "Relations", ->
     sent = mostRecentAjaxRequest().params
     expect(sent).toBe JSON.stringify
                         page:
-                          id: undefined
                           name: 'Home'
-                          footer: {
+                          footer_attributes: {
                             id: undefined
                             content: 'Footer text'
-                            links: []
+                            links_attributes: []
                           }
-                          paragraphs: []
+                          paragraphs_attributes: []
 
 
   it "should have sent nested models - belongs_to", ->
@@ -90,14 +89,13 @@ describe "Relations", ->
     sent = mostRecentAjaxRequest().params
     expect(sent).toBe JSON.stringify
                         footer:
-                          id: undefined
                           content: 'Footer text'
-                          page: {
+                          page_attributes: {
                             id: undefined
                             name: 'Home'
-                            paragraphs: []
+                            paragraphs_attributes: []
                           }
-                          links: []
+                          links_attributes: []
 
   it "should have sent nested models - has_many", ->
     @page.paragraphs.push new Paragraph({content: 'Para 1'})
@@ -107,9 +105,8 @@ describe "Relations", ->
     sent = mostRecentAjaxRequest().params
     expect(sent).toBe JSON.stringify
                         page:
-                          id: undefined
                           name: 'Home'
-                          paragraphs: [{
+                          paragraphs_attributes: [{
                             id: undefined
                             content: 'Para 1'}, {
                             id: undefined

@@ -67,7 +67,7 @@ Ajax =
     persistAt: (@controllerName) -> undefined
 
     getUrl: (model) ->
-        @controllerName ||= @name.toLowerCase() + 's'
+        @controllerName ||= (@name[0] + @name.substr(1).replace(/([A-Z])/g, '_$1')).toLowerCase() + 's'
 
         collectionUrl = "/#{@controllerName}"
         collectionUrl += "/#{model.id()}" if model?.id()
@@ -76,15 +76,46 @@ Ajax =
     extended: -> @include Ajax.InstanceMethods
 
   InstanceMethods:
+    # TODO delete this and mapping creation
     toJSON: ->
-      # TODO is _destroy sent?
       ko.mapping.toJS @, @__ko_mapping__
+
+    toJS: (railsy = false) ->
+      obj = {}
+      rel_suffix = if railsy then '_attributes' else ''
+
+      if @constructor.fieldsSpecified
+        # map only fields
+        for fld in @constructor.fieldNames
+          obj[fld] = @[fld]() if @[fld]()
+
+        for rel in (@constructor.__relations ||= [])
+          {fld, kind} = rel
+          accessor = @[fld]
+
+          if kind == 'has_many' or kind == 'has_and_belongs_to_many'
+            if accessor()
+              val = (elem.toJS(railsy) for elem in accessor())
+            else
+              val = []
+          else
+            val = accessor().toJS(railsy) if accessor()
+
+          obj[fld + rel_suffix] = val
+
+      else
+        # map observables excluding some fields
+        for k, v of this
+          obj[k] = v() if ko.isObservable(v) and ['errors', 'events', 'persisted'].indexOf(k) == -1
+
+      if @_destroy
+        obj._destroy = true
+
+      return obj
 
     delete: ->
       return false unless @persisted()
       @trigger('beforeDelete') # TODO
-
-      data = {id: @id}
 
       params =
         type: 'DELETE'
@@ -96,7 +127,7 @@ Ajax =
         contentType: 'application/json'
         context: this
         processData: false # jQuery tries to serialize to much, including constructor data
-        data: JSON.stringify data
+        #data: JSON.stringify data
         statusCode:
           422: (xhr, status, errorThrown)->
             errorData = JSON.parse xhr.responseText
@@ -117,8 +148,11 @@ Ajax =
 
       @trigger('beforeSave') # Consider moving it into the beforeSend or similar
 
+      json_data = @toJS(true)
+      delete json_data['id']
+
       data = {}
-      data[@constructor.name.toLowerCase()] =@toJSON()
+      data[@constructor.name.toLowerCase()] = json_data
 
       params =
         type: if @persisted() then 'PUT' else 'POST'
@@ -129,6 +163,7 @@ Ajax =
         url: @constructor.getUrl(@)
         contentType: 'application/json'
         context: this
+        # TODO why processData is false? I guess it's kinda old stuff (where ko.Model was sent without unwrapping)
         processData: false # jQuery tries to serialize to much, including constructor data
         data: JSON.stringify data
         statusCode:
@@ -239,7 +274,6 @@ class Model extends Module
         me._originals ||= {}
         me._originals[fn] = original
 
-    # TODO test if persisted is working on destroyed
     @persisted = ko.dependentObservable -> !!me.id() and not me._destroy
     @enableValidations()
 
