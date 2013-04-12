@@ -73,6 +73,9 @@ Ajax =
         collectionUrl += "/#{model.id()}" if model?.id()
         collectionUrl
 
+    # TODO prefix events
+    @__ignored: -> ['errors', 'events', 'persisted']
+
     extended: -> @include Ajax.InstanceMethods
 
   InstanceMethods:
@@ -106,7 +109,7 @@ Ajax =
       else
         # map observables excluding some fields
         for k, v of this
-          obj[k] = v() if ko.isObservable(v) and ['errors', 'events', 'persisted'].indexOf(k) == -1
+          obj[k] = v() if ko.isObservable(v) and @constructor.__ignored().indexOf(k) == -1
 
       if @_destroy
         obj._destroy = true
@@ -304,7 +307,7 @@ class Model extends Module
       if ko.isObservableArray setter
         setter([])
         @errors[fld](undefined) # TODO create of undefined?
-      else if ko.isObservable setter
+      else if ko.isObservable setter and @constructor.__ignored().indexOf(fld) == -1
         setter(undefined)
         @errors[fld](undefined)
 

@@ -169,9 +169,9 @@ ko.Validations.validators.reservation_name = (model, field, options) ->
     return if is_valid then null else "is invalid"
 ```
 
-## End note - no test available
+## End note - writing tests in progress
 
-I haven't written tests for all above (pending, I have no excuse but stupid ones) and I haven't rewritten original tests. Till then consider my version of gem as in-development. Help would be very appreciated. :)
+I haven't written tests for all above, though crucial functionality has been tested. Rest of tests is in progress..
 
 # Install
 
