@@ -171,6 +171,7 @@ Ajax =
         data: JSON.stringify data
         statusCode:
           422: (xhr, status, errorThrown)->
+            # TODO move to fail
             errorData = JSON.parse xhr.responseText
             console?.debug?("Validation error: ", errorData)
             @updateErrors(errorData.errors)
@@ -183,6 +184,7 @@ Ajax =
         .done (resp, status, xhr)->
           if xhr.status == 201 # Created
             @set resp
+          # TODO create or updated - can we tell the difference?
 
           @updateErrors {}
           @trigger('saveSuccess', resp, xhr, status)
@@ -277,6 +279,9 @@ class Model extends Module
     @persisted = ko.dependentObservable -> !!me.id() and not me._destroy
     @enableValidations()
 
+  dup: ->
+    return new @constructor(@toJS())
+
   setField: (fld, value) ->
     # if relation
     if rel = @constructor.__get_relation(fld)
@@ -299,6 +304,10 @@ class Model extends Module
     @
 
   set: (json) ->
+    if kor.utils.getType(json.toJS) == 'function'
+      # set data from another object
+      return @set json.toJS()
+
     # clear existing values
     for fld, setter of this
       if ko.isObservableArray setter

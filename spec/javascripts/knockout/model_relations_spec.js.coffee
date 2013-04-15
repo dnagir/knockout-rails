@@ -113,6 +113,8 @@ describe "Relations", ->
                             content: 'Para 2'
                           }]
 
+  # TODO parsing errors {"errors":{"address.postal_code":["jest nieprawidłowe"]}}
+
 
 
 

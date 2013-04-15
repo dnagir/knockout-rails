@@ -35,6 +35,20 @@ describe "Model", ->
     @page._destroy = true
     expect(@page.persisted()).toBeFalsy()
 
+  it "should duplicate instance", ->
+    page_duplicate = @page.dup()
+    expect(page_duplicate).not.toBe @page
+    expect(page_duplicate.toJS()).toEqual @page.toJS()
+
+  it "should set data from another model", ->
+    another = new Page
+      id: 300
+      name: 'Another'
+
+    @page.set another
+    expect(@page).not.toBe another
+    expect(@page.toJS()).toEqual another.toJS()
+
   describe "Ajax", ->
     it "should return jQuery deferred when saving", ->
       expect( @page.save().done ).toBeTruthy()
