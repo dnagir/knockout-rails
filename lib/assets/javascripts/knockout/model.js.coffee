@@ -6,6 +6,13 @@
 # Module is taken from Spine.js
 moduleKeywords = ['included', 'extended']
 class Module
+  @extend: (obj) ->
+    throw('extend(obj) requires obj') unless obj
+    for key, value of obj when key not in moduleKeywords
+      @[key] = value
+    obj.extended?.apply(@)
+    @
+
   @include: (obj) ->
     throw('include(obj) requires obj') unless obj
     for key, value of obj when key not in moduleKeywords
@@ -13,13 +20,15 @@ class Module
     obj.included?.apply(@)
     @
 
-  @extend: (obj) ->
-    throw('extend(obj) requires obj') unless obj
+  # instance-level include allowing access to object instance
+  include: (obj) ->
+    throw('include(obj) requires obj') unless obj
     for key, value of obj when key not in moduleKeywords
-      @[key] = value
-    obj.extended?.apply(@)
+      # TODO getPrototypeOf on non-chrome browsers, if working rewrite @include to deferred execution
+      Object.getPrototypeOf(@)[key] = value
+    obj.included?.apply(@)
     @
-    
+
 Events =
   ClassMethods:
     extended: ->
