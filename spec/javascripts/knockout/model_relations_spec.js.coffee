@@ -112,6 +112,9 @@ describe "Relations", ->
                             id: undefined
                             content: 'Para 2'
                           }]
+    # TODO empty array should be sent as undefined or {}; [] somehow get nilled during rails processing and ends in exception
+
+  # TODO should validate nested models
 
   # TODO parsing errors {"errors":{"address.postal_code":["jest nieprawidłowe"]}}
 

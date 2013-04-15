@@ -99,7 +99,7 @@ Ajax =
       if @constructor.fieldsSpecified
         # map only fields
         for fld in @constructor.fieldNames
-          obj[fld] = @[fld]() if @[fld]()
+          obj[fld] = @[fld]()
 
         for rel in (@constructor.__relations ||= [])
           {fld, kind} = rel
@@ -303,11 +303,17 @@ class Model extends Module
         throw(rel.kind + ' relation needs an object but array was given') if kor.utils.getType(value) == 'array'
         value = new rel.model(value)
 
-    @[fld] ||= ko.observable()
-    @[fld](value)
-    @errors[fld] ||= ko.observable()
+    unless @[fld]
+      @[fld] = ko.observable()
+      @errors[fld] = ko.observable()
 
-    # add to mapping
+      @[fld].subscribe =>
+        # clear any errors on field change
+        @errors[fld](undefined)
+
+    @[fld](value)
+
+    # TODO clear mapping
     if not @constructor.fieldsSpecified
       @__ko_mapping__.include.push fld
     @
@@ -321,7 +327,7 @@ class Model extends Module
     for fld, setter of this
       if ko.isObservableArray setter
         setter([])
-        @errors[fld](undefined) # TODO create of undefined?
+        @errors[fld](undefined)
       else if ko.isObservable(setter) and @constructor.__ignored().indexOf(fld) == -1
         setter(undefined)
         @errors[fld](undefined)

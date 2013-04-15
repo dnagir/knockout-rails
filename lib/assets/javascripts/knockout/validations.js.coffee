@@ -39,11 +39,6 @@ class ValidationContext
       actualError = [currentError(), newError].exclude((x) -> !x).join(", ")
       me.subject.errors[field]( actualError or null)
 
-    # Clear the error only once before the value gets changed
-    validatorSubscriber.subscribe ->
-        me.subject.errors[field](null)
-      , me.subject, "beforeChange" if me._validations[field].isEmpty()
-
     # Enforce validation right after enabling it (disabled by default)
     skipValidation = @subject.constructor._skipValidationOnInitialization
     if skipValidation != undefined and not skipValidation
@@ -55,6 +50,7 @@ class ValidationContext
 
 Validations =
   ClassMethods:
+    # TODO delete skipValidationOnInitialization
     skipValidationOnInitialization: (enabled) ->
       @_skipValidationOnInitialization = enabled
     extended: -> @include Validations.InstanceMethods
@@ -74,6 +70,16 @@ Validations =
       return true unless @errors
       for key, value of @errors
         return false unless Object.isEmpty value()
+
+      # check errors of related
+      for rel in (@constructor.__relations ||= [])
+        accessor = @[rel.fld]
+        if rel.kind == 'has_many' or rel.kind == 'has_and_belongs_to_many'
+          for elem in (accessor() || [])
+            return false unless elem.isValid()
+        else
+          return false unless accessor().isValid()
+
       return true
 
     enableValidations: ->
