@@ -97,10 +97,10 @@ Ajax =
           accessor = @[fld]
 
           if kind == 'has_many' or kind == 'has_and_belongs_to_many'
-            if accessor()
+            if accessor() and accessor().length > 0
               val = (elem.toJS(railsy) for elem in accessor())
             else
-              val = []
+              val = if railsy then undefined else []
           else
             val = accessor().toJS(railsy) if accessor()
 
