@@ -191,11 +191,11 @@ Ajax =
           @trigger('saveProcessingError', errorThrown, xhr, status) if xhr.status != 422
 
         .done (resp, status, xhr)->
-          if xhr.status == 201 # Created
+          if resp?
             @set resp
-          # TODO create or updated - can we tell the difference?
 
           @updateErrors {}
+          # Create or update can be tell from xhr.status: 201=Created, 200 or 204=No Content(updated)
           @trigger('saveSuccess', resp, xhr, status)
 
         #.always (xhr, status) -> console.info "always: ", this

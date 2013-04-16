@@ -79,11 +79,11 @@ module KnockoutRails
             next
           end
 
-          next if except[attribute] == []
+          next if except[attribute] == []   # TODO add to skipped
           default_messages = ActiveModel::Errors.new(obj_stub).generate_message(attribute, nil) #=> {:invalid => '..', :too_long => '..'}
 
           attr_validators.each do |validator|
-            next if except[attribute] and except[attribute].include? validator.kind
+            next if except[attribute] and except[attribute].include? validator.kind   # TODO add to skipped # TODO log skipped to console
             next if only.length > 0 and (only[attribute] == nil or not (only[attribute] == [] or only[attribute].include? validator.kind))
 
             if validator.kind == :block
