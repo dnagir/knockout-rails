@@ -83,6 +83,8 @@ ko.Validations.validators =
 
   length: (model, field, options) ->
     val = model[field]()
+    return if not val and options.allow_nil in [true, undefined] # allow_nil defaults to true
+
     val = if val then  val.toString().length else 0
 
     {minimum, maximum} = options
