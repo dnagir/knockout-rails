@@ -68,19 +68,22 @@ Validations =
 
       # check errors
       return true unless @errors
+      isValid = true
       for key, value of @errors
-        return false unless Object.isEmpty value()
+        unless Object.isEmpty value()
+          isValid = false
+          console.log @constructor.name + '.' + key + ': ' + value()
 
       # check errors of related
       for rel in (@constructor.__relations ||= [])
         accessor = @[rel.fld]
         if rel.kind == 'has_many' or rel.kind == 'has_and_belongs_to_many'
           for elem in (accessor() || [])
-            return false unless elem.isValid()
+            isValid = false unless elem.isValid()
         else
-          return false unless accessor().isValid()
+          isValid = false unless accessor().isValid()
 
-      return true
+      return isValid
 
     enableValidations: ->
       return false unless @constructor.validates
