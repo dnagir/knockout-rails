@@ -86,7 +86,7 @@ Validations =
           for elem in (accessor() || [])
             isValid = false unless elem.isValid()
         else
-          isValid = false unless accessor().isValid()
+          isValid = false if accessor() and not accessor().isValid()
 
       return isValid
 
