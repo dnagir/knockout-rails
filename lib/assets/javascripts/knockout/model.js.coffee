@@ -352,14 +352,25 @@ class Model extends Module
     @
 
   updateErrors: (errorData) ->
-    for key, setter of @errors
-      field = @errors[key]
-      error = errorData[key]
-      message = if error and error.join
-          error.join(", ")
+    for fld, setter of @errors
+      field = @errors[fld]
+      errors = errorData[fld]
+
+      # if related object
+      if (rel = @constructor.__get_relation(fld)) and errors and kor.utils.getType(errors[0]) == 'object'
+        if rel.kind == 'has_one' or rel.kind == 'belongs_to'
+          @[fld]().updateErrors errors[0]
         else
-          error
-      setter( message ) if field
+          i = 0
+          for nestedObj in @[fld]()
+            nestedObj.updateErrors errors[i++]
+
+      else
+        message = if errors and errors.join
+            errors.join(", ")
+          else
+            errors
+        setter( message ) if field
     @
 
   
