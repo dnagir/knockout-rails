@@ -111,7 +111,7 @@ Ajax =
             else
               val = if railsy then undefined else []
           else
-            val = accessor().toJS(railsy) if accessor()
+            val = if accessor() then accessor().toJS(railsy) else null
 
           obj[fld + rel_suffix] = val
 
