@@ -62,6 +62,8 @@ Validations =
 
   InstanceMethods:
     isValid: ->
+      @errors['base'](null) # Clear base errors
+
       # run all validations
       if @validationContext
         for field, validatorSubscribers of @validationContext._validations

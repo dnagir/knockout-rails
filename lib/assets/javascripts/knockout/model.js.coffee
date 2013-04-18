@@ -238,6 +238,7 @@ class Model extends Module
   # creates mapping and fields
   __initialize: ->
     @errors ||= {}
+    @errors['base'] ||= ko.observable()
 
     # TODO delete mapping
     mapping =
