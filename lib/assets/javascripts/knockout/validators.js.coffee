@@ -41,11 +41,11 @@ ko.Validations.validators =
     return format(options.message || custom_message.not_an_integer || "must be an integer", val) if (options.only_integer or options.odd or options.even) and isFloat
     return format(options.message || custom_message.odd || "must be odd", val) if options.odd and value % 2 == 0
     return format(options.message || custom_message.even || "must be even", val) if options.even and value % 2 == 1
-    return format(options.message || custom_message.greater_than || "must be greater than %{count}", val, options.greater_than) if options.greater_than and value <= options.greater_than
-    return format(options.message || custom_message.less_than || "must be less than %{count}", val, options.less_than) if options.less_than and value >= options.less_than
-    return format(options.message || custom_message.greater_than_or_equal_to || "must be greater than or equal to %{count}", val, options.greater_than_or_equal_to) if options.greater_than_or_equal_to and value < options.greater_than_or_equal_to
-    return format(options.message || custom_message.less_than_or_equal_to || "must be less than or equal to %{count}", val, options.less_than_or_equal_to) if options.less_than_or_equal_to and value > options.less_than_or_equal_to
-    return format(options.message || custom_message.equal_to || "must be equal to %{count}", val, options.equal_to) if options.equal_to and value != options.equal_to
+    return format(options.message || custom_message.greater_than || "must be greater than %{count}", val, options.greater_than) if options.greater_than? and value <= options.greater_than
+    return format(options.message || custom_message.less_than || "must be less than %{count}", val, options.less_than) if options.less_than? and value >= options.less_than
+    return format(options.message || custom_message.greater_than_or_equal_to || "must be greater than or equal to %{count}", val, options.greater_than_or_equal_to) if options.greater_than_or_equal_to? and value < options.greater_than_or_equal_to
+    return format(options.message || custom_message.less_than_or_equal_to || "must be less than or equal to %{count}", val, options.less_than_or_equal_to) if options.less_than_or_equal_to? and value > options.less_than_or_equal_to
+    return format(options.message || custom_message.equal_to || "must be equal to %{count}", val, options.equal_to) if options.equal_to? and value != options.equal_to
 
     return null # Ca va!
 
@@ -97,9 +97,9 @@ ko.Validations.validators =
     if (exact = minimum) and minimum == maximum and val != exact
       return format(custom_message.wrong_length || options.message || "should be exactly %{count} charaters long", exact, val)
 
-    if minimum and val < minimum
+    if minimum? and val < minimum
       return format(custom_message.too_short || options.message || "should be at least %{count} characters long", minimum, val)
-    if maximum and val > maximum
+    if maximum? and val > maximum
       return format(custom_message.too_long || options.message || "should be no longer than %{count} characters", maximum, val)
 
     return null

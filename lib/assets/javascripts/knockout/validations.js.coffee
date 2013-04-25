@@ -62,18 +62,16 @@ Validations =
 
   InstanceMethods:
     isValid: ->
-      @errors['base'](null) # Clear base errors
+      # Clear all validation errors
+      @updateErrors {}
 
-      # run all validations
+      # Run all validations
       if @validationContext
         for field, validatorSubscribers of @validationContext._validations
-          # clear all validation errors
-          @errors[field](null)
-
           for validatorSubscriber in validatorSubscribers
             validatorSubscriber.notifySubscribers(validatorSubscriber(), 'change') # run validators
 
-      # check errors
+      # Check errors
       return true unless @errors
       isValid = true
       for key, value of @errors
@@ -81,7 +79,7 @@ Validations =
           isValid = false
           console.log @constructor.name + '.' + key + ': ' + value()
 
-      # check errors of related
+      # Check errors of related
       for rel in (@constructor.__relations ||= [])
         accessor = @[rel.fld]
         if rel.kind == 'has_many' or rel.kind == 'has_and_belongs_to_many'

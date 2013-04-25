@@ -253,6 +253,8 @@ class Model extends Module
       mapping.ignore.push k unless ko.isObservable(v)
 
     if @constructor.fieldsSpecified
+      @constructor.fieldNames.push 'id' if 'id' not in @constructor.fieldNames
+
       # map only fields
       for fld in @constructor.fieldNames
         mapping.include.push fld
@@ -267,15 +269,15 @@ class Model extends Module
           @[fld] = ko.observable()
         @errors[fld] = ko.observable()
 
+    @id ||= ko.observable()
+
     mapping.include.push '_destroy'
     @__ko_mapping__ = mapping
 
   constructor: (json = {}) ->
     me = this
     @__initialize()
-
     @set json
-    @id ||= ko.observable()
 
     # Overly Heavy, heavy binding to `this`...
     @__ko_mapping__.ignore.exclude('constructor').filter (v)->
