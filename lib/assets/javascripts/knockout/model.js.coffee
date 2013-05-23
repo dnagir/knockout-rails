@@ -339,11 +339,14 @@ class Model extends Module
           @setField fld, undefined
     else
       for fld, setter of this
-        if ko.isObservableArray setter
-          setter([])
-        else if ko.isObservable(setter) and @constructor.__ignored().indexOf(fld) == -1
-          setter(undefined)
-        @errors[fld](undefined)
+        if @constructor.__ignored().indexOf(fld) == -1
+          if ko.isObservableArray setter
+            setter([])
+            @errors[fld](undefined)
+
+          else if ko.isObservable(setter) and
+            setter(undefined)
+            @errors[fld](undefined)
 
     # set values
     for fld in Object.keys(json)
