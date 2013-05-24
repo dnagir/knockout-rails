@@ -344,7 +344,7 @@ class Model extends Module
             setter([])
             @errors[fld](undefined)
 
-          else if ko.isObservable(setter) and
+          else if ko.isObservable(setter)
             setter(undefined)
             @errors[fld](undefined)
 
