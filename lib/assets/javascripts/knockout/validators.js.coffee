@@ -25,10 +25,13 @@ ko.Validations.validators =
     # Here you can specify them in options.messages.<custom_key>, ie. options.messages.greater_than
 
     val = model[field]()
-    return if options.allow_nil and not val # allow_nil defaults to false
 
-    numericParts = val.toString().trim().match /^([+-]?\d+)(\.\d+)?$/ if val
-    return options.message || options.messages.not_a_number || "is not a number" unless numericParts
+    if val? and val != ''
+      numericParts = val.toString().trim().match /^([+-]?\d+)(\.\d+)?$/
+    else
+      return if options.allow_nil # allow_nil defaults to false
+
+    return options.message || options.messages.not_a_number || "is not a number" unless numericParts?
 
     isFloat = numericParts[2] != undefined
     value = parseFloat(val)
