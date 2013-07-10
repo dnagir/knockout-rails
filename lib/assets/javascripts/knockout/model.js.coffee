@@ -1,4 +1,5 @@
 #=require jquery
+#=require knockout/ie_hack
 #=require knockout/validations
 #=require knockout/validators
 #=require knockout/ko_extensions
