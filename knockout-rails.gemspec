@@ -13,7 +13,7 @@ Gem::Specification.new do |s|
 
   s.rubyforge_project = "knockout-rails"
 
-  s.add_dependency             'sprockets', '~> 2.2.0'
+  s.add_dependency             'sprockets', '>= 2.2.0'
   s.add_dependency             'execjs'
   s.add_dependency             'jquery-rails'
 
