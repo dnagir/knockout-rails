@@ -4,175 +4,6 @@ If you have any questions please contact me [@dnagir](http://www.ApproachE.com).
 
 This provides a set of conveniences for you to use more like Backbone or Spine, but still fully leveraging KnockoutJS.
 
-# !! CHANGES by KrzysztofMadejski
-
-This gem hasn't been developed since year or some so instead of filing issues I've extended it with what I thought was missing. This version is not fully compatible with original 1.0.1 (validations are rewritten and there were some small changes in model). I've bumped it to 2.0.0, altought i would say it's kind of 'development' version and 0.2.0 would be more appriopriate, especially that I'm not a Coffeescript and JS guru. I've done development in master branch, but if I further work on this I will stick to http://nvie.com/posts/a-successful-git-branching-model/.
-
-Ok, the changes go below (my commits are also quite self-describing)
-
-## Server-side errors handling
-
-ActiveResource default convention to return errors in json is `{:errors => {:name => ["Name can't be blank"], :city => ["City can't be blank"]}}`. Knockout-rails now expects errors to be wrapped like that instead of simple `{field: error_list}` dictionary.
-
-If you initialize an object using data with errors (`{name: 'bla', errors: ['bla forbidden']`) they will be treated as errors and not a field.
-
-## Update object after save success
-
-Server-side can compute some additional fields on model instance so it would be wise to update it on save success (HTTP 201 Created). Done!
-
-## Deleting object
-
-One of basic CRUD operations is now implemented. Just call `instance.delete()`. On success `id` will be nilled, so `instance.persisted()` will properly return `false`.
-
-## Skip validation on initialization
-
-I've had problem when creating new model instances (CRUD again) dynamically (`@reservations.push(new SeatReservation())`). Validations were invoked straight-on before user even managed to click anywhere. Now validations are skipped on object creation by default. You can bring back the previous behaviour using:
-
-```coffee
-class @SeatReservation extends ko.Model
-  @skipValidationOnInitialization false
-  ...
-```
-
-## Event callbacks
-
-I've extended list of events and added instance-level callbacks (`model_instance.upon 'sayHi', -> alert 'hi'`).
-
-Looking at skeary branch I've found very helpfull extending the list of events. Here goes the full supported list:
-
-* beforeSave
-* saveSuccess
-* saveValidationError
-* saveProcessingError
-* beforeDelete
-* deleteError
-* deleteSuccess
-
-Sometimes one need to bind events only to chosen objects instead of all model instances. For example to inform model-list-container about update success. So I've added instance-level callbacks:
-
-```coffee
-class @SeatReservation extends ko.Model
-  @persistAt 'meal'
-  @fields 'name', 'meal'
-
-  # model-level callback
-  @beforeSave ->
-    @name = @name.trim
-
-  # is the same as:
-  @upon 'beforeSave', ->
-    @name = @name.trim
-
-class @SeatReservationListVM
-  constructor: (json) ->
-    @reservations = ko.observableArray()
-
-    for jreservation in json
-      do (jreservation) =>
-        reservation = new SeatReservation(jreservation)
-
-        # INSTANCE-level callback
-        reservation.upon 'beforeSave', ->
-          @name = @name + ' OLD'
-
-        @reservations.push(reservation)
-```
-
-Maybe `afterSave` and `afterDelete` events (invoked always despite the result) could be heplful as well. If so, report an issue. Also, I was wondering if `saveSuccess` should have an argument specifying if model instance was created or updated.
-
-## Railsy validations
-
-When I first looked at knockout-rails I was like "Wooow, it even mimics rails ActiveRecord validations!". Now I see they are not perfect (nor are AR validation when I discovered later). I've rewritten all validators (dropping @email) to mimic (argument names) and behave like rails-one do. Specifically:
-
-* You can always specify a message and allows_nil flag
-* All validator attribues should mimic rails with few exceptions
-  * `in` and `with` attributes are keywords in coffee and thus need to be escaped with quotes, ie.: `@exclusion 'type', 'in': ['T1', 'T2']`
-  * `LengthValidator` custom message are placed inside hash `messages` (an example is few lines below)
-  * `if` and `unless` options are both keywords, so I've left original `only` and `except` (it's still rails convention, though not for validators)
-* You can use placeholders in messages, ie. `@exclusion 'type', within: ['T1', 'T2'], message: '%{value} is not allowed'`
-* Custom messages are placed in additional `messages` hash, ie. `@length 'name', maximum: 10, messages: {too_short: 'maximum %{count} characters allowed'}`
-
-## ! Rails2Coffee validation and field mapper !
-
-Tired of rewriting model validations in coffee to match those in AR models? Afraid that you will forget to rewrite them again after model changes? Introducing..
-
-`seat_reservation.js.coffee.erb`
-
-```erb
-class @SeatReservation extends ko.Model
-  @persistAt 'meal'
-  <%= SeatReservation.knockout_fields %>
-
-  @validates: ->
-    <%= SeatReservation.knockout_validations %>
-    ###
-    Leave returned code in compiled js for debugging, inspecting skipped validators, etc.
-    <%= SeatReservation.knockout_validations newline: true %>
-    ###
-```
-
-`knockout_fields` accepts following options:
-* `except` - list of filtered attributes. It defaults to `[:created_at, :updated_at]`. If you would like to have those use `SeatReservation.knockout_fields except: []`
-* `only` - instead of blacklisting with `except` you can whitelist attributes
-* `extra` - if you want to add few attributes you should use `extra` instead of whitelisting all fields
-
-`knockout_validations` accepts `except` and `only` options:
-```ruby
-# USAGE only: {attribute: []} # include all
-# USAGE only: {attribute: :validator_kind}
-# USAGE only: {attribute: [:kind1, :kind2]}
-
-# USAGE except: {attribute: []} # ignore all validators for attribute
-# USAGE except: {attribute: :validator_kind}
-# USAGE except: {attribute: [:kind1, :kind2]}
-```
-
-`knockout_validations` is skipping `validates_with CustomValidator` options and conditional validations (using `if` and `unless`) as one cannot automatically map ruby block to JS. `validates_each` block-based validations are also skipped. If you want to see what's skipped look at generated coffee code either trough `###` coffee block comments or simply by renaming file to `seat_reservation.js.erb`, so it's not processed by coffee compiler.
-
-`knockout_validations` automatically maps EachValidator validations though you have to write its client-side js counterpart by yourself.
-
-Having:
-
-`app/validators/ReservationNameValidator.rb`
-
-```ruby
-class ReservationNameValidator < ActiveModel::EachValidator
-  def validate_each(record,attribute,value)
-     is_valid = false # implement
-     record.errors[attribute] << "is invalid" unless is_valid
-  end
-end
-```
-
-and `app/models/seat_reservation.rb`
-
-```ruby
-class SeatReservation < ActiveRecord::Base
-  # Attributes
-  attr_accessible :name, :meal
-
-  # Validations
-  validates :name, reservation_name: true
-end
-```
-
-`SeatReservation.knockout_validations` will produce `@reservation_name 'name', {}`
-
-As `reservation_name` validator is custom you have to write it and bind to `ko.Validations.validators`:
-
-```coffee
-ko.Validations.validators.reservation_name = (model, field, options) ->
-    val = model[field]()
-    return if options.allow_nil and not val # allow_nil defaults to false
-
-    is_valid = false # implement
-    return if is_valid then null else "is invalid"
-```
-
-## End note - writing tests in progress
-
-I haven't written tests for all above, though crucial functionality has been tested. Rest of tests is in progress..
-
 # Install
 
 Add it to your Rails application's `Gemfile`:
@@ -433,6 +264,169 @@ Now you can go to `spec/javascripts` and start writing your specs and then modif
 
 
 Pull requests are very welcome, but please include the specs! It's extremely easy to write those!
+
+# CHANGES  1.0.1 > 2.0.0 by Krzysztof Madejski
+
+This version is not fully compatible with original 1.0.1 (validations are rewritten and there were some small changes in model).
+
+## Server-side errors handling
+
+ActiveResource default convention to return errors in json is `{:errors => {:name => ["Name can't be blank"], :city => ["City can't be blank"]}}`. Knockout-rails now expects errors to be wrapped like that instead of simple `{field: error_list}` dictionary.
+
+If you initialize an object using data with errors (`{name: 'bla', errors: ['bla forbidden']`) they will be treated as errors and not a field.
+
+## Update object after save success
+
+Server-side can compute some additional fields on model instance so it would be wise to update it on save success (HTTP 201 Created). Done!
+
+## Deleting object
+
+One of basic CRUD operations is now implemented. Just call `instance.delete()`. On success `id` will be nilled, so `instance.persisted()` will properly return `false`.
+
+## Skip validation on initialization
+
+I've had problem when creating new model instances (CRUD again) dynamically (`@reservations.push(new SeatReservation())`). Validations were invoked straight-on before user even managed to click anywhere. Now validations are skipped on object creation by default. You can bring back the previous behaviour using:
+
+```coffee
+class @SeatReservation extends ko.Model
+  @skipValidationOnInitialization false
+  ...
+```
+
+## Event callbacks
+
+I've extended list of events and added instance-level callbacks (`model_instance.upon 'sayHi', -> alert 'hi'`).
+
+Looking at skeary branch I've found very helpfull extending the list of events. Here goes the full supported list:
+
+* beforeSave
+* saveSuccess
+* saveValidationError
+* saveProcessingError
+* beforeDelete
+* deleteError
+* deleteSuccess
+
+Sometimes one need to bind events only to chosen objects instead of all model instances. For example to inform model-list-container about update success. So I've added instance-level callbacks:
+
+```coffee
+class @SeatReservation extends ko.Model
+  @persistAt 'meal'
+  @fields 'name', 'meal'
+
+  # model-level callback
+  @beforeSave ->
+    @name = @name.trim
+
+  # is the same as:
+  @upon 'beforeSave', ->
+    @name = @name.trim
+
+class @SeatReservationListVM
+  constructor: (json) ->
+    @reservations = ko.observableArray()
+
+    for jreservation in json
+      do (jreservation) =>
+        reservation = new SeatReservation(jreservation)
+
+        # INSTANCE-level callback
+        reservation.upon 'beforeSave', ->
+          @name = @name + ' OLD'
+
+        @reservations.push(reservation)
+```
+
+Maybe `afterSave` and `afterDelete` events (invoked always despite the result) could be heplful as well. If so, report an issue. Also, I was wondering if `saveSuccess` should have an argument specifying if model instance was created or updated.
+
+## Railsy validations
+
+When I first looked at knockout-rails I was like "Wooow, it even mimics rails ActiveRecord validations!". Now I see they are not perfect (nor are AR validation when I discovered later). I've rewritten all validators (dropping @email) to mimic (argument names) and behave like rails-one do. Specifically:
+
+* You can always specify a message and allows_nil flag
+* All validator attribues should mimic rails with few exceptions
+  * `in` and `with` attributes are keywords in coffee and thus need to be escaped with quotes, ie.: `@exclusion 'type', 'in': ['T1', 'T2']`
+  * `LengthValidator` custom message are placed inside hash `messages` (an example is few lines below)
+  * `if` and `unless` options are both keywords, so I've left original `only` and `except` (it's still rails convention, though not for validators)
+* You can use placeholders in messages, ie. `@exclusion 'type', within: ['T1', 'T2'], message: '%{value} is not allowed'`
+* Custom messages are placed in additional `messages` hash, ie. `@length 'name', maximum: 10, messages: {too_short: 'maximum %{count} characters allowed'}`
+
+## Rails2Coffee validation and field mapper
+
+Tired of rewriting model validations in coffee to match those in AR models? Afraid that you will forget to rewrite them again after model changes? Introducing..
+
+`seat_reservation.js.coffee.erb`
+
+```erb
+class @SeatReservation extends ko.Model
+  @persistAt 'meal'
+  <%= SeatReservation.knockout_fields %>
+
+  @validates: ->
+    <%= SeatReservation.knockout_validations %>
+    ###
+    Leave returned code in compiled js for debugging, inspecting skipped validators, etc.
+    <%= SeatReservation.knockout_validations newline: true %>
+    ###
+```
+
+`knockout_fields` accepts following options:
+* `except` - list of filtered attributes. It defaults to `[:created_at, :updated_at]`. If you would like to have those use `SeatReservation.knockout_fields except: []`
+* `only` - instead of blacklisting with `except` you can whitelist attributes
+* `extra` - if you want to add few attributes you should use `extra` instead of whitelisting all fields
+
+`knockout_validations` accepts `except` and `only` options:
+```ruby
+# USAGE only: {attribute: []} # include all
+# USAGE only: {attribute: :validator_kind}
+# USAGE only: {attribute: [:kind1, :kind2]}
+
+# USAGE except: {attribute: []} # ignore all validators for attribute
+# USAGE except: {attribute: :validator_kind}
+# USAGE except: {attribute: [:kind1, :kind2]}
+```
+
+`knockout_validations` is skipping `validates_with CustomValidator` options and conditional validations (using `if` and `unless`) as one cannot automatically map ruby block to JS. `validates_each` block-based validations are also skipped. If you want to see what's skipped look at generated coffee code either trough `###` coffee block comments or simply by renaming file to `seat_reservation.js.erb`, so it's not processed by coffee compiler.
+
+`knockout_validations` automatically maps EachValidator validations though you have to write its client-side js counterpart by yourself.
+
+Having:
+
+`app/validators/ReservationNameValidator.rb`
+
+```ruby
+class ReservationNameValidator < ActiveModel::EachValidator
+  def validate_each(record,attribute,value)
+     is_valid = false # implement
+     record.errors[attribute] << "is invalid" unless is_valid
+  end
+end
+```
+
+and `app/models/seat_reservation.rb`
+
+```ruby
+class SeatReservation < ActiveRecord::Base
+  # Attributes
+  attr_accessible :name, :meal
+
+  # Validations
+  validates :name, reservation_name: true
+end
+```
+
+`SeatReservation.knockout_validations` will produce `@reservation_name 'name', {}`
+
+As `reservation_name` validator is custom you have to write it and bind to `ko.Validations.validators`:
+
+```coffee
+ko.Validations.validators.reservation_name = (model, field, options) ->
+    val = model[field]()
+    return if options.allow_nil and not val # allow_nil defaults to false
+
+    is_valid = false # implement
+    return if is_valid then null else "is invalid"
+```
 
 # License
 
