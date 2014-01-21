@@ -9,6 +9,10 @@ class CompanyEmployeePage extends ko.Model
 
 class Company extends ko.Model
   @persistAt 'admin/companies' # custom plural form and namespaces
+class BadPage extends ko.Model
+  @fields 'bank'
+  @validates: ->
+    @presence 'bank'
 
 describe "Model", ->
 
@@ -38,7 +42,7 @@ describe "Model", ->
   it "should duplicate instance", ->
     page_duplicate = @page.dup()
     expect(page_duplicate).not.toBe @page
-    expect(page_duplicate.toJS()).toEqual @page.toJS()
+    expect(page_duplicate.toJSON()).toEqual @page.toJSON()
 
   it "should set data from another model", ->
     another = new Page
@@ -47,7 +51,7 @@ describe "Model", ->
 
     @page.set another
     expect(@page).not.toBe another
-    expect(@page.toJS()).toEqual another.toJS()
+    expect(@page.toJSON()).toEqual another.toJSON()
 
   describe "Ajax", ->
     it "should return jQuery deferred when saving", ->
@@ -96,18 +100,11 @@ describe "Model", ->
           content: 'Hello'
 
     it "should not save if invalid", ->
-      @page.errors.name 'whatever'
-      expect(@page.save()).toBeFalsy()
+      bad_page = new BadPage
+      expect(bad_page.save()).toBeFalsy()
       expect(mostRecentAjaxRequest()).toBeFalsy()
 
     describe "errors", ->
-
-      it "should have errors on fields only", ->
-        keys = Object.keys(@page.errors)
-        expect(keys).toContain 'id'
-        expect(keys).toContain 'name'
-        expect(keys).toContain 'content'
-        expect(keys.length).toBe 3
 
       it "should have errors for fields", ->
         e = @page.errors
@@ -131,7 +128,7 @@ describe "Model", ->
           @page.save()
           mostRecentAjaxRequest().response
             status: 422
-            responseText: '{"name": ["got ya", "really"]}'
+            responseText: '{"errors": {"name": ["got ya", "really"]}}'
           expect( @page.errors.name() ).toBe "got ya, really"
 
   describe "events", ->

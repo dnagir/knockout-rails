@@ -4,10 +4,10 @@ ko.Validations.validators =
   acceptance: (model, field, options) ->
     val = model[field]()
 
-    return null if not val and options.allow_nil in [true, undefined] # allow_nil defaults to true
+    return null if val == undefined and options.allow_nil
 
     accepted = if options.accept then val == options.accept else val
-    unless accepted then options.message || "must be accepted" else null
+    unless accepted then (options.message or "must be accepted") else null
 
   presence: (model, field, options) ->
     val = model[field]()
@@ -18,7 +18,7 @@ ko.Validations.validators =
     confirmationField = options.confirmedBy || field + '_confirmation'
     orig = model[field]()
     confirmation = model[confirmationField]()
-    if confirmation and orig != confirmation then options.message or "doesn’t match confirmation" else null
+    if orig and orig != confirmation then (options.message or "doesn’t match confirmation") else null
 
   numericality: (model, field, options) ->
     # Rails is missing functionality for NumericalityValidator: cannot specify custom messages for different conditions like in length
@@ -30,15 +30,14 @@ ko.Validations.validators =
       numericParts = val.toString().trim().match /^([+-]?\d+)(\.\d+)?$/
     else
       return if options.allow_nil # allow_nil defaults to false
+    custom_message = options.messages || {}
 
-    return options.message || options.messages.not_a_number || "is not a number" unless numericParts?
+    return options.message || custom_message.not_a_number || "is not a number" unless numericParts?
 
     isFloat = numericParts[2] != undefined
     value = parseFloat(val)
     format = (msg, value, count = null) ->
       msg.replace(/%{count}/g, count).replace(/%{value}/g, value)
-
-    custom_message = options.messages || {}
 
     # Rails prefer default message rather than custom keys which I find quite unintuitive, but.. let's stick to it
     return format(options.message || custom_message.not_an_integer || "must be an integer", val) if (options.only_integer or options.odd or options.even) and isFloat

@@ -295,7 +295,7 @@ class Model extends Module
         me._originals ||= {}
         me._originals[fn] = original
 
-    @persisted = ko.dependentObservable -> !!me.id() and not me._destroy
+    @persisted = -> !!me.id() and not me._destroy
     @enableValidations()
 
   dup: ->

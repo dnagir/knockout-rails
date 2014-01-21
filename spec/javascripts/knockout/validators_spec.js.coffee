@@ -59,9 +59,9 @@ describe "ko.Validations.validators", ->
   describe "confirmation", ->
     isError = (val, confirmation) ->
       model =
-        name: ko.observable(val)
-        other: ko.observable(confirmation)
-      ko.Validations.validators.confirmation(model, 'name', confirms: 'other')
+        pass: ko.observable(val)
+        pass_conf: ko.observable(confirmation)
+      ko.Validations.validators.confirmation(model, 'pass', confirmedBy: 'pass_conf')
 
     it "should not allow unconfirmed", ->
       expect(isError 'a', 'b').toBeTruthy()
@@ -85,28 +85,42 @@ describe "ko.Validations.validators", ->
     it "should not allow for non-numbers", ->
       expect(isError "asd").toBeTruthy()
 
-    it "should not allow some numbers", ->
-      expect(isError '123.45').toBeTruthy()
+    it "should not allow non integers", ->
+      expect(isError '123.45', only_integer: true).toBeTruthy()
+
+    it "should allow floats", ->
+      expect(isError '123.45').toBeFalsy()
+      expect(isError '123.45', greater_than: 123).toBeFalsy()
 
     it "should allow", ->
-      expect(isError "").toBeFalsy()
-      expect(isError undefined).toBeFalsy()
-      expect(isError null).toBeFalsy()
+      expect(isError "", allow_nil:true).toBeFalsy()
+      expect(isError undefined, allow_nil:true).toBeFalsy()
+      expect(isError null, allow_nil:true).toBeFalsy()
       expect(isError '123').toBeFalsy()
 
-    it "should respec min option", ->
-      expect(isError 123, min: 200).toBeTruthy()
-      expect(isError 123, min: 100).toBeFalsy()
-      expect(isError 100, min: 100).toBeFalsy()
+    it "should respec greater_than option", ->
+      expect(isError 123, greater_than: 200).toBeTruthy()
+      expect(isError 123, greater_than: 100).toBeFalsy()
+      expect(isError -1, greater_than: 0).toBeTruthy()
+      expect(isError -1, greater_than: -2).toBeFalsy()
 
-      expect(isError -1, min: 0).toBeTruthy()
-      expect(isError -1, min: -2).toBeFalsy()
-      expect(isError 0, min: 0).toBeFalsy()
+    it "should respec greater_than_equal option", ->
+      expect(isError 100, greater_than_equal: 100).toBeFalsy()
+
+    it "should respec odd option", ->
+      expect(isError -1, odd: true).toBeFalsy()
+      expect(isError 2, odd: true).toBeTruthy()
+
+    it "should respec less_than option", ->
+      expect(isError 0, less_than: 0).toBeTruthy()
+
+    it "should respec less_than_equal option", ->
+      expect(isError 0, less_than_equal: 0).toBeFalsy()
 
 
 
   describe "inclusion", ->
-    isError = (val, values) -> isErrorFor('inclusion', val, values: values)
+    isError = (val, values) -> isErrorFor('inclusion', val, in: values, allow_nil:true)
 
     it "should not allow", ->
       expect(isError 'a', ['b', 'c']).toBeTruthy()
@@ -119,7 +133,7 @@ describe "ko.Validations.validators", ->
 
 
   describe "exclusion", ->
-    isError = (val, values) -> isErrorFor('exclusion', val, values: values)
+    isError = (val, values) -> isErrorFor('exclusion', val, in: values, allow_nil:true)
 
     it "should allow", ->
       expect(isError 'a', ['b', 'c']).toBeFalsy()
@@ -132,7 +146,7 @@ describe "ko.Validations.validators", ->
 
 
   describe "format", ->
-    isError = (val, rx) -> isErrorFor('format', val, match: rx)
+    isError = (val, rx) -> isErrorFor('format', val, with: rx, allow_nil:true)
 
     it "should not allow", ->
       expect(isError 'asd', /\d/).toBeTruthy()
@@ -149,22 +163,24 @@ describe "ko.Validations.validators", ->
     isError = (val, options) -> isErrorFor('length', val, options)
 
     it "with min", ->
-      expect(isError 'x', min: 2).toBeTruthy()
-      expect(isError 'x', min: 1).toBeFalsy()
-      expect(isError 'x', min: 0).toBeFalsy()
+      expect(isError 'x', minimum: 2).toBeTruthy()
+      expect(isError 'x', minimum: 1).toBeFalsy()
+      expect(isError 'x', minimum: 0).toBeFalsy()
 
     it "with max", ->
-      expect(isError 'xxx', max: 2).toBeTruthy()
-      expect(isError 'xxx', max: 3).toBeFalsy()
-      expect(isError 'xxx', max: 4).toBeFalsy()
+      expect(isError 'xxx', maximum: 2).toBeTruthy()
+      expect(isError 'xxx', maximum: 3).toBeFalsy()
+      expect(isError 'xxx', maximum: 4).toBeFalsy()
 
     it "should allow", ->
-      expect(isError null, min: 2).toBeFalsy()
-      expect(isError undefined, min: 2).toBeFalsy()
-      expect(isError '', min: 2).toBeFalsy()
+      expect(isError null, minimum: 2).toBeFalsy()
+      expect(isError undefined, minimum: 2).toBeFalsy()
+      expect(isError '', minimum: 2).toBeFalsy()
 
     it "should have descriptive message", ->
-      expect(isError 'xxx', min: 11).toBe "should be at least 11 characters long"
-      expect(isError 'xxx', max: 2).toBe "should be no longer than 2 characters"
-      expect(isError 'xxx', min: 1, max: 2).toBe "should be at least 1 characters long but no longer than 2 characters"
+      expect(isError 'xxx', minimum: 11).toBe "should be at least 11 characters long"
+      expect(isError 'xxx', maximum: 2).toBe "should be no longer than 2 characters"
+      expect(isError 'xxx', minimum: 1, maximum: 2).toBe "should be no longer than 2 characters"
+      expect(isError 'xxx', minimum: 5, maximum: 7).toBe "should be at least 5 characters long"
+
 

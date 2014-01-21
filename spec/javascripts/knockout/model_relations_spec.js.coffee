@@ -47,7 +47,7 @@ describe "Relations", ->
     expect(@page.footer()).toBeNull # has_one
     expect(@page.paragraphs()).toEqual [] # has_many
     expect(@footer.page()).toBeNull # belongs_to
-    expect(@footer.links()).toEqual [] # has_and_belongs_to_many
+    expect(@footer.links().length).toEqual(2) # has_and_belongs_to_many
 
   it "should create instance of specified model", ->
     page = new Page
@@ -110,7 +110,7 @@ describe "Relations", ->
     page.paragraphs.push new Paragraph({content: 'Para 1'})
     page.paragraphs.push new Paragraph({content: 'Para 2'})
 
-    page.save()
+    expect(page.save()).toBeTruthy()
     sent = mostRecentAjaxRequest().params
     expect(sent).toBe JSON.stringify
                         page:
@@ -122,8 +122,6 @@ describe "Relations", ->
                             id: undefined
                             content: 'Para 2'
                           }]
-    # TODO empty array should be sent as undefined or {}; [] somehow get nilled during rails processing and ends in exception
-
   # TODO should validate nested models
 
   # TODO parsing errors {"errors":{"address.postal_code":["jest nieprawidłowe"]}}
