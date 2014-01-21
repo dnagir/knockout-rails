@@ -93,7 +93,7 @@ Ajax =
     toJSON: ->
       ko.mapping.toJS @, @__ko_mapping__
 
-    toJS: (railsy = false) ->
+    toJS: (railsy = false, parent=null) ->
       obj = {}
       rel_suffix = if railsy then '_attributes' else ''
 
@@ -105,16 +105,16 @@ Ajax =
         for rel in (@constructor.__relations ||= [])
           {fld, kind} = rel
           accessor = @[fld]
-
-          if kind == 'has_many' or kind == 'has_and_belongs_to_many'
-            if accessor() and accessor().length > 0
-              val = (elem.toJS(railsy) for elem in accessor())
+          unless parent != null and accessor() == parent
+            if kind == 'has_many' or kind == 'has_and_belongs_to_many'
+              if accessor() and accessor().length > 0
+                val = (elem.toJS(railsy) for elem in accessor())
+              else
+                val = if railsy then {} else []
             else
-              val = if railsy then undefined else []
-          else
-            val = if accessor() then accessor().toJS(railsy) else null
+              val = if accessor() then accessor().toJS(railsy, this) else null
 
-          obj[fld + rel_suffix] = val
+            obj[fld + rel_suffix] = val
 
       else
         # map observables excluding some fields
@@ -122,6 +122,8 @@ Ajax =
           if @constructor.__ignored().indexOf(k) == -1
             if ko.isObservable(v)
               obj[k] = v()
+            else if ko.isObservableArray(v)
+              obj[k] = v.toJS(railsy)
             else
               obj[k] = v
 
@@ -329,7 +331,7 @@ class Model extends Module
   set: (json) ->
     if kor.utils.getType(json.toJS) == 'function'
       # set data from another object
-      return @set json.toJS()
+      json = json.toJSON()
 
     # clear existing values
     if @constructor.fieldsSpecified

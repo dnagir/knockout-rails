@@ -30,6 +30,11 @@ describe "Relations", ->
 
     @footer = new Footer
       content: 'Footer text'
+      page: @page
+      links: [
+        {url: 'url1'}
+        {url: 'url2'}
+      ]
 
   it "should create observable attributes", ->
     expect(@page.name).toBeObservable()
@@ -54,6 +59,7 @@ describe "Relations", ->
       ]
 
     footer = new Footer
+      content: 'Footer text'
       page:
         name: 'Home'
       links: [
@@ -68,6 +74,7 @@ describe "Relations", ->
 
   it "should have sent nested models - has_one", ->
     @page.footer @footer
+    @footer.page @page
 
     @page.save()
     sent = mostRecentAjaxRequest().params
@@ -75,16 +82,16 @@ describe "Relations", ->
                         page:
                           name: 'Home'
                           footer_attributes: {
-                            id: undefined
                             content: 'Footer text'
-                            links_attributes: []
+                            links_attributes: [{"url":"url1"},{"url":"url2"}]
                           }
-                          paragraphs_attributes: []
+                          paragraphs_attributes: {}
 
 
   it "should have sent nested models - belongs_to", ->
     @footer.page @page
-
+    @page.footer @footer
+    @footer.links []
     @footer.save()
     sent = mostRecentAjaxRequest().params
     expect(sent).toBe JSON.stringify
@@ -93,19 +100,22 @@ describe "Relations", ->
                           page_attributes: {
                             id: undefined
                             name: 'Home'
-                            paragraphs_attributes: []
+                            paragraphs_attributes: {}
                           }
-                          links_attributes: []
+                          links_attributes: {}
 
   it "should have sent nested models - has_many", ->
-    @page.paragraphs.push new Paragraph({content: 'Para 1'})
-    @page.paragraphs.push new Paragraph({content: 'Para 2'})
+    page = new Page
+      name: 'Home'
+    page.paragraphs.push new Paragraph({content: 'Para 1'})
+    page.paragraphs.push new Paragraph({content: 'Para 2'})
 
-    @page.save()
+    page.save()
     sent = mostRecentAjaxRequest().params
     expect(sent).toBe JSON.stringify
                         page:
                           name: 'Home'
+                          footer_attributes: null
                           paragraphs_attributes: [{
                             id: undefined
                             content: 'Para 1'}, {

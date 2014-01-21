@@ -61,7 +61,7 @@ Validations =
     extended: -> @include Validations.InstanceMethods
 
   InstanceMethods:
-    isValid: ->
+    isValid: (parent = null) ->
       # Clear all validation errors
       @updateErrors {}
 
@@ -82,11 +82,12 @@ Validations =
       # Check errors of related
       for rel in (@constructor.__relations ||= [])
         accessor = @[rel.fld]
-        if rel.kind == 'has_many' or rel.kind == 'has_and_belongs_to_many'
-          for elem in (accessor() || [])
-            isValid = false unless elem.isValid()
-        else
-          isValid = false if accessor() and not accessor().isValid()
+        unless parent != null and accessor() == parent
+          if rel.kind == 'has_many' or rel.kind == 'has_and_belongs_to_many'
+            for elem in (accessor() || [])
+              isValid = false unless elem.isValid(this)
+          else
+            isValid = false if accessor() and not accessor().isValid(this)
 
       return isValid
 
