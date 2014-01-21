@@ -268,7 +268,7 @@ class Model extends Module
           @[fld] = ko.mappedObservableArray()
         else
           @[fld] = ko.observable()
-        @errors[fld] = ko.observable()
+      @errors[fld] = ko.observable()
 
     @id ||= ko.observable()
 
@@ -343,10 +343,12 @@ class Model extends Module
         if @constructor.__ignored().indexOf(fld) == -1
           if ko.isObservableArray setter
             setter([])
+            @errors[fld] ||= ko.observable()
             @errors[fld](undefined)
 
           else if ko.isObservable(setter)
             setter(undefined)
+            @errors[fld] ||= ko.observable()
             @errors[fld](undefined)
 
     # set values
