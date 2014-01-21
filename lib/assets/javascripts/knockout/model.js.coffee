@@ -119,7 +119,11 @@ Ajax =
       else
         # map observables excluding some fields
         for k, v of this
-          obj[k] = v() if ko.isObservable(v) and @constructor.__ignored().indexOf(k) == -1
+          if @constructor.__ignored().indexOf(k) == -1
+            if ko.isObservable(v)
+              obj[k] = v()
+            else
+              obj[k] = v
 
       if @_destroy
         obj._destroy = true
