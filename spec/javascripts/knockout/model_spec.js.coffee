@@ -53,7 +53,7 @@ describe "Model", ->
     expect(@page).not.toBe another
     expect(@page.toJSON()).toEqual another.toJSON()
 
-  describe "Ajax", ->
+  describe "Ajax save", ->
     it "should return jQuery deferred when saving", ->
       expect( @page.save().done ).toBeTruthy()
 
@@ -73,8 +73,6 @@ describe "Model", ->
       @page.save()
       method = mostRecentAjaxRequest().method
       expect(method).toBe "POST"
-
-    # TODO Delete
 
     it "should persist at model name if url not given", ->
       @page.id(111)
@@ -130,6 +128,22 @@ describe "Model", ->
             status: 422
             responseText: '{"errors": {"name": ["got ya", "really"]}}'
           expect( @page.errors.name() ).toBe "got ya, really"
+  #TODO delete
+  describe "Ajax all", ->
+    it "should create list of objects on all", ->
+      expected_list = [new Page(id: 123,name: "Home"),new Page(id: 122,name: "Dome")]
+      list = Page.all()
+      mostRecentAjaxRequest().response
+        status: 200
+        responseText: JSON.stringify expected_list
+      expect(JSON.stringify list()).toEqual(JSON.stringify expected_list)
+    it "should create empty list of objects on error", ->
+      expected_list = []
+      list = Page.all()
+      mostRecentAjaxRequest().response
+        status: 500
+        responseText: "Error"
+      expect(list()).toEqual(expected_list)
 
   describe "events", ->
     it "should raise events", ->

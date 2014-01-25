@@ -76,12 +76,14 @@ Ajax =
   ClassMethods:
     persistAt: (@controllerName) -> undefined
 
-    getUrl: (model) ->
-        @controllerName ||= (@name[0] + @name.substr(1).replace(/([A-Z])/g, '_$1')).toLowerCase() + 's'
+    getAllUrl: (model) ->
+      @controllerName ||= (@name[0] + @name.substr(1).replace(/([A-Z])/g, '_$1')).toLowerCase() + 's'
+      "/#{@controllerName}"
 
-        collectionUrl = "/#{@controllerName}"
-        collectionUrl += "/#{model.id()}" if model?.id()
-        collectionUrl
+    getUrl: (model) ->
+      collectionUrl = @getAllUrl(model)
+      collectionUrl += "/#{model.id()}" if model?.id()
+      collectionUrl
 
     # TODO prefix events
     __ignored: -> ['errors', 'events', 'persisted']
@@ -387,8 +389,32 @@ class Model extends Module
             errors
         setter( message ) if field
     @
+  @all: (options...) ->
+    #@trigger('beforeAll') # Consider moving it into the beforeSend or similar
+    all_list = ko.mappedObservableArray()
+    params =
+      type: 'GET'
+      dataType: 'json'
+      beforeSend: (xhr)->
+        token = $('meta[name="csrf-token"]').attr('content')
+        xhr.setRequestHeader('X-CSRF-Token', token) if token
+      url: @getAllUrl(@)
+      contentType: 'application/json'
+      context: this
 
-  
+    $.ajax(params)
+    .fail (xhr, status, errorThrown)->
+        ''#@trigger('allError', errorThrown, xhr, status)
+
+    .done (resp, status, xhr)->
+        if resp?
+          returning=[]
+          for obj in resp
+             returning.add(new this(obj))
+        all_list returning
+        #@trigger('allSuccess', resp, xhr, status)
+
+    return all_list
 # Export it all:
 ko.Module = Module
 ko.Model = Model
