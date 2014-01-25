@@ -1,7 +1,14 @@
 class Page extends ko.Model
   @upon 'sayHi', (hi) ->
     @sayHi = hi
- 
+
+  @beforeAll ->
+    @beforeAllCall = true
+  @allSuccess ->
+    @allSuccessCall = true
+  @allError ->
+    @allErrorCall = true
+
   @beforeSave ->
     @beforeSaved = true
 
@@ -22,7 +29,10 @@ describe "Model", ->
       id: 123
       name: 'Home'
       content: 'Hello'
-
+    Page.beforeAllCall = false
+    Page.allSuccessCall = false
+    Page.allErrorCall = false
+    Page.beforeSaved = false
 
   it "should create observable attributes", ->
     expect(@page.name()).toBe 'Home'
@@ -143,7 +153,31 @@ describe "Model", ->
       mostRecentAjaxRequest().response
         status: 500
         responseText: "Error"
+      expect(mostRecentAjaxRequest().url).toEqual('/pages')
       expect(list()).toEqual(expected_list)
+    it "should send parametes", ->
+      Page.all(from: 1, to: 3)
+      expect(mostRecentAjaxRequest().url).toEqual('/pages?from=1&to=3')
+    it "beforeAll should be called ", ->
+      Page.all()
+      expect(Page.beforeAllCall).toBeTruthy()
+    it "allError should be called on error", ->
+      Page.all()
+      mostRecentAjaxRequest().response
+        status: 500
+        responseText: "Error"
+      expect(Page.beforeAllCall).toBeTruthy()
+      expect(Page.allSuccessCall).toBeFalsy()
+      expect(Page.allErrorCall).toBeTruthy()
+    it "allSuccess should be called", ->
+      expected_list = [new Page(id: 123,name: "Home"),new Page(id: 122,name: "Dome")]
+      list = Page.all()
+      mostRecentAjaxRequest().response
+        status: 200
+        responseText: JSON.stringify expected_list
+      expect(Page.beforeAllCall).toBeTruthy()
+      expect(Page.allSuccessCall).toBeTruthy()
+      expect(Page.allErrorCall).toBeFalsy()
 
   describe "events", ->
     it "should raise events", ->

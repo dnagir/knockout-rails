@@ -40,6 +40,10 @@ Events =
       @events[eventName] ||= []
       @events[eventName].push callback
       this # Just to chain it if we need to
+    trigger: (eventName, args...) ->
+      ievents = @events || {}
+      ihandlers = ievents[eventName] || []
+      callback.apply(this, args) for callback in ihandlers
 
   InstanceMethods:
     trigger: (eventName, args...) ->
@@ -71,17 +75,21 @@ Callbacks =
     deleteError: (callback) -> @upon('deleteError', callback)
     deleteSuccess: (callback) -> @upon('deleteSuccess', callback)
 
+    beforeAll: (callback) -> @upon('beforeAll', callback)
+    allError: (callback) -> @upon('allError', callback)
+    allSuccess: (callback) -> @upon('allSuccess', callback)
+
 
 Ajax =
   ClassMethods:
     persistAt: (@controllerName) -> undefined
 
-    getAllUrl: (model) ->
+    getAllUrl: () ->
       @controllerName ||= (@name[0] + @name.substr(1).replace(/([A-Z])/g, '_$1')).toLowerCase() + 's'
       "/#{@controllerName}"
 
     getUrl: (model) ->
-      collectionUrl = @getAllUrl(model)
+      collectionUrl = @getAllUrl()
       collectionUrl += "/#{model.id()}" if model?.id()
       collectionUrl
 
@@ -389,8 +397,8 @@ class Model extends Module
             errors
         setter( message ) if field
     @
-  @all: (options...) ->
-    #@trigger('beforeAll') # Consider moving it into the beforeSend or similar
+  @all: (options) ->
+    @trigger('beforeAll') # Consider moving it into the beforeSend or similar
     all_list = ko.mappedObservableArray()
     params =
       type: 'GET'
@@ -398,13 +406,13 @@ class Model extends Module
       beforeSend: (xhr)->
         token = $('meta[name="csrf-token"]').attr('content')
         xhr.setRequestHeader('X-CSRF-Token', token) if token
-      url: @getAllUrl(@)
+      url: @getAllUrl()
       contentType: 'application/json'
       context: this
-
+    params.data = options if options?
     $.ajax(params)
     .fail (xhr, status, errorThrown)->
-        ''#@trigger('allError', errorThrown, xhr, status)
+        @trigger('allError', errorThrown, xhr, status)
 
     .done (resp, status, xhr)->
         if resp?
@@ -412,7 +420,7 @@ class Model extends Module
           for obj in resp
              returning.add(new this(obj))
         all_list returning
-        #@trigger('allSuccess', resp, xhr, status)
+        @trigger('allSuccess', resp, xhr, status)
 
     return all_list
 # Export it all:

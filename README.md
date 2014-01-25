@@ -283,6 +283,11 @@ Server-side can compute some additional fields on model instance so it would be 
 
 One of basic CRUD operations is now implemented. Just call `instance.delete()`. On success `id` will be nilled, so `instance.persisted()` will properly return `false`.
 
+## Listing objects
+
+And more REST just call `Model.all(param)` and you will get new observableArray from '/models'.
+
+
 ## Skip validation on initialization
 
 I've had problem when creating new model instances (CRUD again) dynamically (`@reservations.push(new SeatReservation())`). Validations were invoked straight-on before user even managed to click anywhere. Now validations are skipped on object creation by default. You can bring back the previous behaviour using:
@@ -306,6 +311,9 @@ Looking at skeary branch I've found very helpfull extending the list of events. 
 * beforeDelete
 * deleteError
 * deleteSuccess
+* beforeAll
+* allError
+* allSuccess
 
 Sometimes one need to bind events only to chosen objects instead of all model instances. For example to inform model-list-container about update success. So I've added instance-level callbacks:
 
