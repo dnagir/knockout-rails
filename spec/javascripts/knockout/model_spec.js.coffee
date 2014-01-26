@@ -147,6 +147,14 @@ describe "Model", ->
         status: 200
         responseText: JSON.stringify expected_list
       expect(JSON.stringify list()).toEqual(JSON.stringify expected_list)
+    it "should update the observable given", ->
+      expected_list = [new Page(id: 123,name: "Home"),new Page(id: 122,name: "Dome")]
+      list = ko.observableArray()
+      Page.all({}, list)
+      mostRecentAjaxRequest().response
+        status: 200
+        responseText: JSON.stringify expected_list
+      expect(JSON.stringify list()).toEqual(JSON.stringify expected_list)
     it "should create empty list of objects on error", ->
       expected_list = []
       list = Page.all()

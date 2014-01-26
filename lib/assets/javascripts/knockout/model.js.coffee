@@ -397,9 +397,9 @@ class Model extends Module
             errors
         setter( message ) if field
     @
-  @all: (options) ->
+  @all: (options, all_list=null) ->
     @trigger('beforeAll') # Consider moving it into the beforeSend or similar
-    all_list = ko.mappedObservableArray()
+    all_list ||= ko.observableArray()
     params =
       type: 'GET'
       dataType: 'json'

@@ -285,7 +285,7 @@ One of basic CRUD operations is now implemented. Just call `instance.delete()`. 
 
 ## Listing objects
 
-And more REST just call `Model.all(param)` and you will get new observableArray from '/models'.
+And more REST just call `modelList = Model.all()` and you will get new observableArray from '/models'. To update `modelList` you need to call `Model.all({},modelList)`. To send parameters use `Model.all({param: 'value'})` and the url will be `/models?param=value`.
 
 
 ## Skip validation on initialization
