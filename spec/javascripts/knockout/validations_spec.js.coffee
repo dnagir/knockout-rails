@@ -21,7 +21,7 @@ describe "Validations", ->
     @subject = new Page()
 
   it "should initially be invalid", ->
-    expect(@subject.errors.name()).toBeTruthy()
+    expect(@subject.isValid()).toBeFalsy()
 
   it "should set error on a field", ->
     @subject.name ''

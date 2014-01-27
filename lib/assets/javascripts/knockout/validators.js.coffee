@@ -3,79 +3,108 @@
 ko.Validations.validators =
   acceptance: (model, field, options) ->
     val = model[field]()
-    unless val then options.message || "needs to be accepted" else null
+
+    return null if val == undefined and options.allow_nil
+
+    accepted = if options.accept then val == options.accept else val
+    unless accepted then (options.message or "must be accepted") else null
 
   presence: (model, field, options) ->
     val = model[field]()
     isBlank = !val or val.toString().isBlank()
     if isBlank then options.message || "can't be blank" else null
 
-
-  email: (model, field, options) ->
-    val = model[field]()
-    isValid = !val or val.toString().match /.+@.+\..+/
-    unless isValid then options.message or "should be a valid email" else null
-
-
   confirmation: (model, field, options) ->
-    otherField = options.confirms
-    throw "Please specify which field to apply the confirmation to using {confirms: 'otherField'}" unless otherField
+    confirmationField = options.confirmedBy || field + '_confirmation'
     orig = model[field]()
-    other = model[otherField]()
-    if orig != other and orig then options.message or "should confirm #{otherField}" else null
-
+    confirmation = model[confirmationField]()
+    if orig and orig != confirmation then (options.message or "doesn’t match confirmation") else null
 
   numericality: (model, field, options) ->
-    val = model[field]()
-    return unless val
-    looksLikeNumeric = val.toString().match /^-?\d+$/ # We should do better than this
-    num = parseInt val, 10
-    min = if options.min? then options.min else num
-    max = if options.max? then options.max else num
-    if looksLikeNumeric and min <= num <= max then null else options.message or "should be numeric"
+    # Rails is missing functionality for NumericalityValidator: cannot specify custom messages for different conditions like in length
+    # Here you can specify them in options.messages.<custom_key>, ie. options.messages.greater_than
 
+    val = model[field]()
+
+    if val? and val != ''
+      numericParts = val.toString().trim().match /^([+-]?\d+)(\.\d+)?$/
+    else
+      return if options.allow_nil # allow_nil defaults to false
+    custom_message = options.messages || {}
+
+    return options.message || custom_message.not_a_number || "is not a number" unless numericParts?
+
+    isFloat = numericParts[2] != undefined
+    value = parseFloat(val)
+    format = (msg, value, count = null) ->
+      msg.replace(/%{count}/g, count).replace(/%{value}/g, value)
+
+    # Rails prefer default message rather than custom keys which I find quite unintuitive, but.. let's stick to it
+    return format(options.message || custom_message.not_an_integer || "must be an integer", val) if (options.only_integer or options.odd or options.even) and isFloat
+    return format(options.message || custom_message.odd || "must be odd", val) if options.odd and value % 2 == 0
+    return format(options.message || custom_message.even || "must be even", val) if options.even and value % 2 == 1
+    return format(options.message || custom_message.greater_than || "must be greater than %{count}", val, options.greater_than) if options.greater_than? and value <= options.greater_than
+    return format(options.message || custom_message.less_than || "must be less than %{count}", val, options.less_than) if options.less_than? and value >= options.less_than
+    return format(options.message || custom_message.greater_than_or_equal_to || "must be greater than or equal to %{count}", val, options.greater_than_or_equal_to) if options.greater_than_or_equal_to? and value < options.greater_than_or_equal_to
+    return format(options.message || custom_message.less_than_or_equal_to || "must be less than or equal to %{count}", val, options.less_than_or_equal_to) if options.less_than_or_equal_to? and value > options.less_than_or_equal_to
+    return format(options.message || custom_message.equal_to || "must be equal to %{count}", val, options.equal_to) if options.equal_to? and value != options.equal_to
+
+    return null # Ca va!
 
   inclusion: (model, field, options) ->
-    values = options.values
-    throw "Please specify the values {values: [1, 2, 5]}" unless values
-    val = model[field]()
-    return unless val
-    if values.indexOf(val) < 0 then options.message or "should be one of #{values.join(', ')}" else null
+    values = options['in'] || options.within
+    throw "Please specify the values {in: [1, 2, 5]}" unless values
+    format = (msg, value) ->
+      msg.replace(/%{value}/g, value)
 
+    val = model[field]()
+    return if not val and options.allow_nil
+    if values.indexOf(val) < 0 then format(options.message || "is not included in the list", val) else null
 
   exclusion: (model, field, options) ->
-    values = options.values
-    throw "Please specify the values {values: [1, 2, 5]}" unless values
+    values = options['in'] || options.within
+    throw "Please specify the values {in: [1, 2, 5]}" unless values
+    format = (msg, value) ->
+      msg.replace(/%{value}/g, value)
+
     val = model[field]()
-    return unless val
-    if values.indexOf(val) >= 0 then options.message or "should not be any of #{values.join(', ')}" else null
+    if values.indexOf(val) >= 0 then format(options.message || "is reserved", val) else null
 
   format: (model, field, options) ->
-    matcher = options.match
-    throw "Please specify the match RegEx {match: /\d+/}" unless matcher
+    match = options.with
+    wont_match = options.without
+    throw "Please specify the with (or without) RegEx {'with': /\d+/}" unless match or wont_match
+
     val = model[field]()
-    return unless val
-    if val.toString().match matcher then null else options.message or "should be formatted properly"
+    valStr = if val then val.toString() else ''
+    return if not val and options.allow_nil
+
+    if (match and not valStr.match match) or (wont_match and valStr.match wont_match)
+      return options.message or "is invalid"
+    return null
 
   length: (model, field, options) ->
     val = model[field]()
-    return unless val
-    val = val.toString().length
-    {min, max} = options
-    min = val unless min?
-    max = val unless max?
-    createMsg = ->
-      minMsg = if options.min?
-        "at least #{min} characters long"
-      else
-        ""
-      maxMsg = if options.max?
-        "no longer than #{max} characters"
-      else
-        ""
-      separator = if minMsg and maxMsg then " but " else ""
-      "should be #{minMsg}#{separator}#{maxMsg}"
-    if min <= val <= max then null else options.message or createMsg()
+    return if not val and options.allow_nil in [true, undefined] # allow_nil defaults to true
+
+    val = if val then  val.toString().length else 0
+
+    {minimum, maximum} = options
+    format = (msg, count, value) ->
+      msg.replace(/%{count}/g, count).replace(/%{value}/g, value)
+
+    custom_message = options.messages || {}
+
+    # minimum == maximum
+    if (exact = minimum) and minimum == maximum and val != exact
+      return format(custom_message.wrong_length || options.message || "should be exactly %{count} charaters long", exact, val)
+
+    if minimum? and val < minimum
+      return format(custom_message.too_short || options.message || "should be at least %{count} characters long", minimum, val)
+    if maximum? and val > maximum
+      return format(custom_message.too_long || options.message || "should be no longer than %{count} characters", maximum, val)
+
+    return null
 
   custom: (model, field, options) ->
     # Treat options as a mandatory callback

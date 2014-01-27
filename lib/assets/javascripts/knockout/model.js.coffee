@@ -1,10 +1,19 @@
 #=require jquery
+#=require knockout/ie_hack
 #=require knockout/validations
 #=require knockout/validators
+#=require knockout/ko_extensions
 
 # Module is taken from Spine.js
 moduleKeywords = ['included', 'extended']
 class Module
+  @extend: (obj) ->
+    throw('extend(obj) requires obj') unless obj
+    for key, value of obj when key not in moduleKeywords
+      @[key] = value
+    obj.extended?.apply(@)
+    @
+
   @include: (obj) ->
     throw('include(obj) requires obj') unless obj
     for key, value of obj when key not in moduleKeywords
@@ -12,64 +21,168 @@ class Module
     obj.included?.apply(@)
     @
 
-  @extend: (obj) ->
-    throw('extend(obj) requires obj') unless obj
+  # instance-level include allowing access to object instance
+  include: (obj) ->
+    throw('include(obj) requires obj') unless obj
     for key, value of obj when key not in moduleKeywords
-      @[key] = value
-    obj.extended?.apply(@)
+      # TODO getPrototypeOf on non-chrome browsers, if working rewrite @include to deferred execution
+      Object.getPrototypeOf(@)[key] = value
+    obj.included?.apply(@)
     @
-    
+
 Events =
   ClassMethods:
     extended: ->
-      @events ||= {}
       @include Events.InstanceMethods
+
     upon: (eventName, callback) ->
-      @events[eventName] || = []
+      @events ||= {}
+      @events[eventName] ||= []
       @events[eventName].push callback
       this # Just to chain it if we need to
+    trigger: (eventName, args...) ->
+      ievents = @events || {}
+      ihandlers = ievents[eventName] || []
+      callback.apply(this, args) for callback in ihandlers
 
   InstanceMethods:
     trigger: (eventName, args...) ->
-      events = @constructor.events
-      handlers = events[eventName] || []
-      callback.apply(this, args) for callback in handlers
+      cevents = @constructor.events || {}
+      chandlers = cevents[eventName] || []
+      callback.apply(this, args) for callback in chandlers
+
+      ievents = @events || {}
+      ihandlers = ievents[eventName] || []
+      callback.apply(this, args) for callback in ihandlers
+
       this # so that we can chain
+
+    upon: (eventName, callback) ->
+      @events ||= {}
+      @events[eventName] ||= []
+      @events[eventName].push callback
+      this # Just to chain it if we need to
 
 
 Callbacks =
   ClassMethods:
     beforeSave: (callback) -> @upon('beforeSave', callback)
+    saveSuccess: (callback) -> @upon('saveSuccess', callback)
+    saveValidationError: (callback) -> @upon('saveValidationError', callback) # server validation errors
+    saveProcessingError: (callback) -> @upon('saveProcessingError', callback)
+
+    beforeDelete: (callback) -> @upon('beforeDelete', callback)
+    deleteError: (callback) -> @upon('deleteError', callback)
+    deleteSuccess: (callback) -> @upon('deleteSuccess', callback)
+
+    beforeAll: (callback) -> @upon('beforeAll', callback)
+    allError: (callback) -> @upon('allError', callback)
+    allSuccess: (callback) -> @upon('allSuccess', callback)
+
 
 Ajax =
   ClassMethods:
-    persistAt: (@className) ->
-      @getUrl ||= (model) ->
-        return model.getUrl(model) if model and model.getUrl
-        collectionUrl = "/#{className.toLowerCase()}s"
-        collectionUrl += "/#{model.id()}" if model?.id()
-        collectionUrl
+    persistAt: (@controllerName) -> undefined
+
+    getAllUrl: () ->
+      @controllerName ||= (@name[0] + @name.substr(1).replace(/([A-Z])/g, '_$1')).toLowerCase() + 's'
+      "/#{@controllerName}"
+
+    getUrl: (model) ->
+      collectionUrl = @getAllUrl()
+      collectionUrl += "/#{model.id()}" if model?.id()
+      collectionUrl
+
+    # TODO prefix events
+    __ignored: -> ['errors', 'events', 'persisted']
+
     extended: -> @include Ajax.InstanceMethods
 
-
   InstanceMethods:
-    ignore:  -> []
-    mapping: ->
-      return @__ko_mapping__ if @__ko_mapping__
-      mappable =
-        ignore: @ignore()
-      for k, v of this
-        mappable.ignore.push k unless ko.isObservable(v)
-      @__ko_mapping__ = mappable
+    # TODO delete this and mapping creation
+    toJSON: ->
+      ko.mapping.toJS @, @__ko_mapping__
 
-    toJSON: -> ko.mapping.toJS @, @mapping()
+    toJS: (railsy = false, parent=null) ->
+      obj = {}
+      rel_suffix = if railsy then '_attributes' else ''
+
+      if @constructor.fieldsSpecified
+        # map only fields
+        for fld in @constructor.fieldNames
+          obj[fld] = @[fld]()
+
+        for rel in (@constructor.__relations ||= [])
+          {fld, kind} = rel
+          accessor = @[fld]
+          unless parent != null and accessor() == parent
+            if kind == 'has_many' or kind == 'has_and_belongs_to_many'
+              if accessor() and accessor().length > 0
+                val = (elem.toJS(railsy) for elem in accessor())
+              else
+                val = if railsy then {} else []
+            else
+              val = if accessor() then accessor().toJS(railsy, this) else null
+
+            obj[fld + rel_suffix] = val
+
+      else
+        # map observables excluding some fields
+        for k, v of this
+          if @constructor.__ignored().indexOf(k) == -1
+            if ko.isObservable(v)
+              obj[k] = v()
+            else if ko.isObservableArray(v)
+              obj[k] = v.toJS(railsy)
+            else
+              obj[k] = v
+
+      if @_destroy
+        obj._destroy = true
+
+      return obj
+
+    delete: ->
+      return false unless @persisted()
+      @trigger('beforeDelete') # TODO
+
+      params =
+        type: 'DELETE'
+        dataType: 'json'
+        beforeSend: (xhr)->
+          token = $('meta[name="csrf-token"]').attr('content')
+          xhr.setRequestHeader('X-CSRF-Token', token) if token
+        url: @constructor.getUrl(@)
+        contentType: 'application/json'
+        context: this
+        processData: false # jQuery tries to serialize to much, including constructor data
+        #data: JSON.stringify data
+        statusCode:
+          422: (xhr, status, errorThrown)->
+            errorData = JSON.parse xhr.responseText
+            console?.debug?("Validation error: ", errorData)
+            @updateErrors(errorData.errors)
+
+      $.ajax(params)
+        .fail (xhr, status, errorThrown)->
+          @trigger('deleteError', errorThrown, xhr, status) if xhr.status == 422
+          @trigger('deleteError', errorThrown, xhr, status) if xhr.status != 422
+
+        .done (resp, status, xhr)->
+          @id(null)
+          @trigger('deleteSuccess', resp, xhr, status)
 
     save: ->
-      allowSaving = @isValid()
-      return false unless allowSaving
+      return false unless @isValid()
+
       @trigger('beforeSave') # Consider moving it into the beforeSend or similar
+
+      json_data = @toJS(true)
+      delete json_data['id']
+
       data = {}
-      data[@constructor.className] =@toJSON()
+      data[@constructor.name.toLowerCase()] = json_data
+
       params =
         type: if @persisted() then 'PUT' else 'POST'
         dataType: 'json'
@@ -79,37 +192,112 @@ Ajax =
         url: @constructor.getUrl(@)
         contentType: 'application/json'
         context: this
+        # TODO why processData is false? I guess it's kinda old stuff (where ko.Model was sent without unwrapping)
         processData: false # jQuery tries to serialize to much, including constructor data
         data: JSON.stringify data
         statusCode:
           422: (xhr, status, errorThrown)->
+            # TODO move to fail
             errorData = JSON.parse xhr.responseText
             console?.debug?("Validation error: ", errorData)
-            @updateErrors(errorData)
+            @updateErrors(errorData.errors)
 
       $.ajax(params)
-        #.fail (xhr, status, errorThrown)-> console.error "fail: ", this
-        .done (resp, status, xhr)-> @updateErrors {}
+        .fail (xhr, status, errorThrown)->
+          @trigger('saveValidationError', errorThrown, xhr, status) if xhr.status == 422
+          @trigger('saveProcessingError', errorThrown, xhr, status) if xhr.status != 422
+
+        .done (resp, status, xhr)->
+          if resp?
+            @set resp
+
+          @updateErrors {}
+          # Create or update can be tell from xhr.status: 201=Created, 200 or 204=No Content(updated)
+          @trigger('saveSuccess', resp, xhr, status)
+
         #.always (xhr, status) -> console.info "always: ", this
 
+Relations =
+  ClassMethods:
+    __add_relation: (kind, fld, model) ->
+      throw('Target model of relation has to be specified') unless model
+      throw('Relation field has to be specified') unless fld
 
+      @fieldsSpecified = true # TODO prefix __
+      @fieldNames ||= []
+      @__relations ||= []
+      @__relations.push kind: kind, fld: fld, model: model
+
+    __get_relation: (fld) ->
+      for rel in (@__relations ||= [])
+        if rel.fld == fld
+          # deferred reference to model
+          rel.model = rel.model() if kor.utils.getType(rel.model) == 'function' and Object.keys(rel.model).isEmpty()
+
+          return rel
+
+    has_one: (fld, model) -> @__add_relation 'has_one', fld, model
+    belongs_to: (fld, model) -> @__add_relation 'belongs_to', fld, model
+    has_many: (fld, model) -> @__add_relation 'has_many', fld, model
+    has_and_belongs_to_many: (fld, model) -> @__add_relation 'has_and_belongs_to_many', fld, model
 
 class Model extends Module
   @extend Ajax.ClassMethods
   @extend Events.ClassMethods
   @extend Callbacks.ClassMethods
+  @extend Relations.ClassMethods
   @extend ko.Validations.ClassMethods
 
   @fields: (fieldNames...) ->
-    fieldNames = fieldNames.flatten() # when a single arg is given as an array
-    @fieldNames = fieldNames
+    @fieldNames = fieldNames.flatten() # when a single arg is given as an array
+    @fieldsSpecified = true
 
-  constructor: (json) ->
-    me = this
-    @set json
+  # creates mapping and fields
+  __initialize: ->
+    @errors ||= {}
+    @errors['base'] ||= ko.observable()
+
+    # TODO delete mapping
+    mapping =
+      ignore: @constructor.__ignored()
+      include: []
+      copy: []
+      observe: []
+      copiedProperties: {}
+      mappedProperties: {}
+
+    for k, v of this
+      mapping.ignore.push k unless ko.isObservable(v)
+
+    if @constructor.fieldsSpecified
+      @constructor.fieldNames.push 'id' if 'id' not in @constructor.fieldNames
+
+      # map only fields
+      for fld in @constructor.fieldNames
+        mapping.include.push fld
+        @setField fld, undefined
+
+      for rel in (@constructor.__relations ||= [])
+        {fld, kind} = rel
+        mapping.include.push fld
+        if kind == 'has_many' or kind == 'has_and_belongs_to_many'
+          @[fld] = ko.mappedObservableArray()
+        else
+          @[fld] = ko.observable()
+      @errors[fld] = ko.observable()
+
     @id ||= ko.observable()
+
+    mapping.include.push '_destroy'
+    @__ko_mapping__ = mapping
+
+  constructor: (json = {}) ->
+    me = this
+    @__initialize()
+    @set json
+
     # Overly Heavy, heavy binding to `this`...
-    @mapping().ignore.exclude('constructor').filter (v)->
+    @__ko_mapping__.ignore.exclude('constructor').filter (v)->
         not v.startsWith('_') and Object.isFunction me[v]
       .forEach (fn) ->
         original = me[fn]
@@ -117,35 +305,124 @@ class Model extends Module
         me._originals ||= {}
         me._originals[fn] = original
 
-    @persisted = ko.dependentObservable -> !!me.id()
+    @persisted = -> !!me.id() and not me._destroy
+    @enableValidations()
+
+  dup: ->
+    return new @constructor(@toJS())
+
+  setField: (fld, value) ->
+    # if relation
+    if rel = @constructor.__get_relation(fld)
+      if rel.kind == 'has_many' or rel.kind == 'has_and_belongs_to_many'
+        throw(rel.kind + ' relation needs an array but ' + value + ' was given') unless kor.utils.getType(value) == 'array'
+
+        @[fld] ||= ko.mappedObservableArray()
+        value = (new rel.model(elem) for elem in value when elem)
+      else if value
+        throw(rel.kind + ' relation needs an object but array was given') if kor.utils.getType(value) == 'array'
+        value = new rel.model(value)
+
+    unless @[fld]
+      @[fld] = ko.observable()
+      @errors[fld] = ko.observable()
+
+      @[fld].subscribe =>
+        # clear any errors on field change
+        @errors[fld](undefined)
+
+    @[fld](value)
+
+    # TODO clear mapping
+    if not @constructor.fieldsSpecified
+      @__ko_mapping__.include.push fld
+    @
 
   set: (json) ->
-    ko.mapping.fromJS json, @mapping(), @
-    me = this
-    @errors ||= {}
-    ignores = @mapping().ignore
-    availableFields = @constructor.fieldNames
-    availableFields ||= @constructor.fields Object.keys(json) # Configure fields unless done manually
+    if kor.utils.getType(json.toJS) == 'function'
+      # set data from another object
+      json = json.toJSON()
 
-    #for key, value of json
-    for key in availableFields when ignores.indexOf(key) < 0
-      @[key] ||= ko.observable()
-      @errors[key] ||= ko.observable()
-    @enableValidations()
+    # clear existing values
+    if @constructor.fieldsSpecified
+      # map only fields
+      for fld in @constructor.fieldNames
+        @setField fld, undefined
+      for rel in (@constructor.__relations ||= [])
+        {fld, kind} = rel
+        if kind == 'has_many' or kind == 'has_and_belongs_to_many'
+          @setField fld, []
+        else
+          @setField fld, undefined
+    else
+      for fld, setter of this
+        if @constructor.__ignored().indexOf(fld) == -1
+          if ko.isObservableArray setter
+            setter([])
+            @errors[fld] ||= ko.observable()
+            @errors[fld](undefined)
+
+          else if ko.isObservable(setter)
+            setter(undefined)
+            @errors[fld] ||= ko.observable()
+            @errors[fld](undefined)
+
+    # set values
+    for fld in Object.keys(json)
+      @setField fld, json[fld]
+
+    # initialize server-side given errors
+    if json.errors
+      @updateErrors json.errors
     @
 
   updateErrors: (errorData) ->
-    for key, setter of @errors
-      field = @errors[key]
-      error = errorData[key]
-      message = if error and error.join
-          error.join(", ")
-        else
-          error
-      setter( message ) if field
-    @
+    for fld, setter of @errors
+      field = @errors[fld]
+      errors = errorData[fld]
 
-  
+      # if related object
+      if (rel = @constructor.__get_relation(fld)) and errors and kor.utils.getType(errors[0]) == 'object'
+        if rel.kind == 'has_one' or rel.kind == 'belongs_to'
+          @[fld]().updateErrors errors[0]
+        else
+          i = 0
+          for nestedObj in @[fld]()
+            nestedObj.updateErrors errors[i++]
+
+      else
+        message = if errors and errors.join
+            errors.join(", ")
+          else
+            errors
+        setter( message ) if field
+    @
+  @all: (options, all_list=null) ->
+    @trigger('beforeAll') # Consider moving it into the beforeSend or similar
+    all_list ||= ko.observableArray()
+    params =
+      type: 'GET'
+      dataType: 'json'
+      beforeSend: (xhr)->
+        token = $('meta[name="csrf-token"]').attr('content')
+        xhr.setRequestHeader('X-CSRF-Token', token) if token
+      url: @getAllUrl()
+      contentType: 'application/json'
+      context: this
+    params.data = options if options?
+    $.ajax(params)
+    .fail (xhr, status, errorThrown)->
+        @trigger('allError', errorThrown, xhr, status)
+
+    .done (resp, status, xhr)->
+        if resp?
+          returning=[]
+          for obj in resp
+             returning.add(new this(obj))
+        all_list returning
+        @trigger('allSuccess', resp, xhr, status)
+
+    return all_list
 # Export it all:
 ko.Module = Module
 ko.Model = Model

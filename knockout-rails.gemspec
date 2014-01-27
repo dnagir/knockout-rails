@@ -13,12 +13,12 @@ Gem::Specification.new do |s|
 
   s.rubyforge_project = "knockout-rails"
 
-  s.add_dependency             'sprockets', '>= 2.0.0'
+  s.add_dependency             'sprockets', '>= 2.2.0'
   s.add_dependency             'execjs'
   s.add_dependency             'jquery-rails'
 
   s.add_development_dependency 'rspec'
-  s.add_development_dependency 'rails', '>= 3.1.1'
+  s.add_development_dependency 'rails', '~> 3.2.12' # TODO use just sprockets
 
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
